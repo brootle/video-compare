@@ -3,8 +3,14 @@
 import { useRef, useState } from 'react';
 import './App.css';
 
-import originalVideo from './assets/videos/demo-original.mp4';
-import optimizedVideo from './assets/videos/demo-optimized.mp4';
+// import originalVideo from './assets/videos/demo-original.mp4';
+// import optimizedVideo from './assets/videos/demo-optimized.mp4';
+
+const originalVideo =
+  'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4';
+
+const optimizedVideo =
+  'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4';
 
 type ActiveVideo = 'original' | 'optimized';
 
