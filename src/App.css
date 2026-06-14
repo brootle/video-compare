@@ -75,3 +75,21 @@
   position: absolute;
   inset: 0;
 }
+
+.url-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.url-inputs div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.url-inputs input {
+  padding: 8px 12px;
+  font-size: 14px;
+}

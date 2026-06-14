@@ -6,15 +6,25 @@ import './App.css';
 // import originalVideo from './assets/videos/demo-original.mp4';
 // import optimizedVideo from './assets/videos/demo-optimized.mp4';
 
-const originalVideo =
-  'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4';
+// const originalVideo =
+//   'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4';
 
-const optimizedVideo =
-  'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4';
+// const optimizedVideo =
+//   'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4';
+
 
 type ActiveVideo = 'original' | 'optimized';
 
 function App() {
+
+  const [originalVideoUrl, setOriginalVideoUrl] = useState(
+    'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4'
+  );
+
+  const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(
+    'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4'
+  );
+
   const originalRef = useRef<HTMLVideoElement | null>(null);
   const optimizedRef = useRef<HTMLVideoElement | null>(null);
 
@@ -189,6 +199,28 @@ function App() {
     <main className="app">
       <h1>Video Compare</h1>
 
+      <div className="url-inputs">
+        <div>
+          <label htmlFor="original-url">Original Video URL</label>
+          <input
+            id="original-url"
+            type="text"
+            value={originalVideoUrl}
+            onChange={(event) => setOriginalVideoUrl(event.target.value)}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="optimized-url">Optimized Video URL</label>
+          <input
+            id="optimized-url"
+            type="text"
+            value={optimizedVideoUrl}
+            onChange={(event) => setOptimizedVideoUrl(event.target.value)}
+          />
+        </div>
+      </div>      
+
       <div className="toolbar">
         <button onClick={() => setActiveVideo('original')}>Original</button>
         <button onClick={() => setActiveVideo('optimized')}>Optimized</button>
@@ -260,7 +292,8 @@ function App() {
           <video
             ref={originalRef}
             className={activeVideo === 'original' ? 'video visible' : 'video hidden'}
-            src={originalVideo}
+            //src={originalVideo}
+            src={originalVideoUrl}
             preload="auto"
             muted
             onLoadedMetadata={(event) => {
@@ -272,7 +305,8 @@ function App() {
           <video
             ref={optimizedRef}
             className={activeVideo === 'optimized' ? 'video visible' : 'video hidden'}
-            src={optimizedVideo}
+            //src={optimizedVideo}
+            src={optimizedVideoUrl}
             preload="auto"
             muted
             onLoadedMetadata={(event) => {
