@@ -1,6 +1,6 @@
 // Next stage: zoom + pan.
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 // import originalVideo from './assets/videos/demo-original.mp4';
@@ -221,6 +221,60 @@ function App() {
     setOptimizedVideoUrl(optimizedInputUrl);
   };  
 
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+
+      if (target.tagName === 'INPUT') return;
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+        handleToggle();
+      }
+
+      if (event.key.toLowerCase() === 'k') {
+        handlePlayPause();
+      }
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handleFrameStep(-1);
+      }
+
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleFrameStep(1);
+      }
+
+      if (event.key === '+') {
+        handleZoomIn();
+      }
+
+      if (event.key === '-') {
+        handleZoomOut();
+      }
+
+      if (event.key.toLowerCase() === 'r') {
+        handleResetView();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [
+    handleToggle,
+    handlePlayPause,
+    handleFrameStep,
+    handleZoomIn,
+    handleZoomOut,
+    handleResetView,
+  ]);  
+
+
   return (
     <main className="app">
       <h1>Video Compare</h1>
@@ -363,6 +417,18 @@ function App() {
 
 
       </div>
+
+      <div className="shortcuts">
+        <strong>Shortcuts</strong>
+
+        <span><kbd>Space</kbd> Toggle A/B</span>
+        <span><kbd>K</kbd> Play / Pause</span>
+        <span><kbd>←</kbd> Previous frame</span>
+        <span><kbd>→</kbd> Next frame</span>
+        <span><kbd>+</kbd> Zoom in</span>
+        <span><kbd>-</kbd> Zoom out</span>
+        <span><kbd>R</kbd> Reset view</span>
+      </div>      
     </main>
   );
 }
