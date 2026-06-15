@@ -17,13 +17,25 @@ type ActiveVideo = 'original' | 'optimized';
 
 function App() {
 
-  const [originalVideoUrl, setOriginalVideoUrl] = useState(
-    'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4'
-  );
+  // const [originalVideoUrl, setOriginalVideoUrl] = useState(
+  //   'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4'
+  // );
 
-  const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(
-    'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4'
-  );
+  // const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(
+  //   'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4'
+  // );
+
+  const defaultOriginalUrl =
+    'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4';
+
+  const defaultOptimizedUrl =
+    'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4';
+
+  const [originalInputUrl, setOriginalInputUrl] = useState(defaultOriginalUrl);
+  const [optimizedInputUrl, setOptimizedInputUrl] = useState(defaultOptimizedUrl);
+
+  const [originalVideoUrl, setOriginalVideoUrl] = useState(defaultOriginalUrl);
+  const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(defaultOptimizedUrl);  
 
   const originalRef = useRef<HTMLVideoElement | null>(null);
   const optimizedRef = useRef<HTMLVideoElement | null>(null);
@@ -195,11 +207,25 @@ function App() {
   };
 
 
+  const handleLoadVideos = () => {
+    getVideos().forEach((video) => {
+      video.pause();
+      video.currentTime = 0;
+    });
+
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setActiveVideo('original');
+
+    setOriginalVideoUrl(originalInputUrl);
+    setOptimizedVideoUrl(optimizedInputUrl);
+  };  
+
   return (
     <main className="app">
       <h1>Video Compare</h1>
 
-      <div className="url-inputs">
+      {/* <div className="url-inputs">
         <div>
           <label htmlFor="original-url">Original Video URL</label>
           <input
@@ -219,6 +245,26 @@ function App() {
             onChange={(event) => setOptimizedVideoUrl(event.target.value)}
           />
         </div>
+      </div>       */}
+
+      <div className="url-inputs">
+        <label>
+          Original URL
+          <input
+            value={originalInputUrl}
+            onChange={(event) => setOriginalInputUrl(event.target.value)}
+          />
+        </label>
+
+        <label>
+          Optimized URL
+          <input
+            value={optimizedInputUrl}
+            onChange={(event) => setOptimizedInputUrl(event.target.value)}
+          />
+        </label>
+
+        <button onClick={handleLoadVideos}>Load videos</button>
       </div>      
 
       <div className="toolbar">
