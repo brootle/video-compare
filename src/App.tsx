@@ -31,6 +31,10 @@ function App() {
   const defaultOptimizedUrl =
     'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4';
 
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 32;
+  const ZOOM_STEP = 0.5;    
+
   const [originalInputUrl, setOriginalInputUrl] = useState(defaultOriginalUrl);
   const [optimizedInputUrl, setOptimizedInputUrl] = useState(defaultOptimizedUrl);
 
@@ -170,13 +174,21 @@ function App() {
     handleSeek(nextTime);
   };  
 
+  // const handleZoomIn = () => {
+  //   setZoom((current) => Math.min(current + 0.25, 8));
+  // };
+
+  // const handleZoomOut = () => {
+  //   setZoom((current) => Math.max(current - 0.25, 1));
+  // };
+
   const handleZoomIn = () => {
-    setZoom((current) => Math.min(current + 0.25, 8));
+    setZoom((current) => Math.min(current + ZOOM_STEP, MAX_ZOOM));
   };
 
   const handleZoomOut = () => {
-    setZoom((current) => Math.max(current - 0.25, 1));
-  };
+    setZoom((current) => Math.max(current - ZOOM_STEP, MIN_ZOOM));
+  };  
 
   const handleResetView = () => {
     setZoom(1);
@@ -315,7 +327,31 @@ function App() {
         </div>
       </div>       */}
 
-      <div className="url-inputs">
+      <div className="video-sources">
+        <h3>Video Sources</h3>
+
+        <label className="url-input">
+          <span className="url-label">Original URL:</span>
+          <input
+            value={originalInputUrl}
+            onChange={(event) => setOriginalInputUrl(event.target.value)}
+          />
+        </label>
+
+        <label className="url-input">
+          <span className="url-label">Optimized URL:</span>
+          <input
+            value={optimizedInputUrl}
+            onChange={(event) => setOptimizedInputUrl(event.target.value)}
+          />
+        </label>
+
+        <button onClick={handleLoadVideos}>
+          Load Videos
+        </button>
+      </div>      
+
+      {/* <div className="url-inputs">
         <label>
           Original URL
           <input
@@ -333,45 +369,112 @@ function App() {
         </label>
 
         <button onClick={handleLoadVideos}>Load videos</button>
-      </div>      
+      </div>       */}
+
+      {/* <div className="toolbar">
+
+        <div>
+          <button onClick={() => setActiveVideo('original')}>Original</button>
+          <button onClick={() => setActiveVideo('optimized')}>Optimized</button>
+
+          <button onClick={handleToggle}>
+            Toggle A/B
+          </button>          
+
+          <strong>Showing: {activeVideo}</strong>
+        </div>
+
+        <div>
+          <button onClick={handlePlayPause}>
+            {isPlaying ? 'Pause' : 'Play'}
+          </button>
+
+          <button onClick={() => handleFrameStep(-1)}>
+            Previous frame
+          </button>
+
+          <button onClick={() => handleFrameStep(1)}>
+            Next frame
+          </button>    
+
+          <label>
+            FPS
+            <input
+              type="number"
+              min={1}
+              max={240}
+              value={frameRate}
+              onChange={(event) => setFrameRate(Number(event.target.value))}
+            />
+          </label>                     
+        </div>
+
+
+        <div>
+          <button onClick={handleZoomOut}>Zoom out</button>
+          <button onClick={handleZoomIn}>Zoom in</button>
+
+          <strong>Zoom: {zoom.toFixed(1)}x</strong>
+
+          <button onClick={handleResetView}>Reset view</button>               
+        </div>
+   
+      </div> */}
 
       <div className="toolbar">
-        <button onClick={() => setActiveVideo('original')}>Original</button>
-        <button onClick={() => setActiveVideo('optimized')}>Optimized</button>
+        <section className="control-group">
+          <h3>Compare</h3>
 
-        <button onClick={handleToggle}>
-          Toggle A/B
-        </button>
+          <div className="button-row">
+            <button onClick={() => setActiveVideo('original')}>Original</button>
+            <button onClick={() => setActiveVideo('optimized')}>Optimized</button>
+            <button onClick={handleToggle}>Toggle A/B</button>
+          </div>
 
-        <button onClick={handlePlayPause}>
-          {isPlaying ? 'Pause' : 'Play'}
-        </button>
+          <strong>Showing: {activeVideo}</strong>
+        </section>
 
-        <button onClick={() => handleFrameStep(-1)}>
-          Previous frame
-        </button>
+        <section className="control-group">
+          <h3>Playback</h3>
 
-        <button onClick={() => handleFrameStep(1)}>
-          Next frame
-        </button>        
+          <div className="button-row">
+            <button onClick={handlePlayPause}>
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
 
-        <label>
-          FPS
-          <input
-            type="number"
-            min={1}
-            max={240}
-            value={frameRate}
-            onChange={(event) => setFrameRate(Number(event.target.value))}
-          />
-        </label>        
+            <button onClick={() => handleFrameStep(-1)}>
+              Previous frame
+            </button>
 
-        <button onClick={handleZoomOut}>Zoom out</button>
-        <button onClick={handleZoomIn}>Zoom in</button>
-        <button onClick={handleResetView}>Reset view</button>        
+            <button onClick={() => handleFrameStep(1)}>
+              Next frame
+            </button>
+          </div>
 
-        <strong>Showing: {activeVideo}</strong>
-      </div>
+          <label className="fps-control">
+            FPS
+            <input
+              type="number"
+              min={1}
+              max={240}
+              value={frameRate}
+              onChange={(event) => setFrameRate(Number(event.target.value))}
+            />
+          </label>
+        </section>
+
+        <section className="control-group">
+          <h3>View</h3>
+
+          <div className="button-row">
+            <button onClick={handleZoomOut}>Zoom out</button>
+            <button onClick={handleZoomIn}>Zoom in</button>
+            <button onClick={handleResetView}>Reset view</button>
+          </div>
+
+          <strong>Zoom: {zoom.toFixed(1)}x</strong>
+        </section>
+      </div>      
 
       <div className="timeline">
         <input
@@ -442,8 +545,6 @@ function App() {
       </div>
 
       <div className="shortcuts">
-        <strong>Shortcuts</strong>
-
         <span><kbd>Space</kbd> Toggle A/B</span>
         <span><kbd>K</kbd> Play / Pause</span>
         <span><kbd>←</kbd> Previous frame</span>
