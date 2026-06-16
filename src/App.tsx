@@ -61,6 +61,21 @@ function App() {
   const frameStep = 1 / frameRate;
 
   const [activeVideo, setActiveVideo] = useState<ActiveVideo>('original');
+
+  type Verdict = 'original' | 'optimized' | 'same';
+
+  type Label = {
+    originalUrl: string;
+    optimizedUrl: string;
+    time: number;
+    frame: number;
+    verdict: Verdict;
+    activeVideo: ActiveVideo;
+    createdAt: string;
+  };
+
+  const [labels, setLabels] = useState<Label[]>([]);
+
   const [isPlaying, setIsPlaying] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(0);
@@ -245,6 +260,36 @@ function App() {
 
   const getFrameNumber = (time: number) => {
     return Math.round(time * 30);
+  };  
+
+
+const addLabel = (verdict: Verdict) => {
+  const label: Label = {
+    originalUrl: originalVideoUrl,
+    optimizedUrl: optimizedVideoUrl,
+    time: currentTime,
+    frame: getFrameNumber(currentTime),
+    verdict,
+    activeVideo,
+    createdAt: new Date().toISOString(),
+  };
+
+  setLabels((current) => [label, ...current]);
+};
+
+  const exportLabels = () => {
+    const blob = new Blob([JSON.stringify(labels, null, 2)], {
+      type: 'application/json',
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'video-compare-labels.json';
+    link.click();
+
+    URL.revokeObjectURL(url);
   };  
 
 
@@ -476,6 +521,20 @@ function App() {
         </section>
       </div>      
 
+      <section className="label-panel">
+        <h3>Labels: {labels.length}</h3>
+
+        <div className="button-row">
+          <button onClick={() => addLabel('original')}>Original better</button>
+          <button onClick={() => addLabel('optimized')}>Optimized better</button>
+          <button onClick={() => addLabel('same')}>Same</button>
+          <button onClick={exportLabels} disabled={labels.length === 0}>
+            Export JSON
+          </button>
+        </div>
+
+      </section>        
+
       <div className="timeline">
         <input
           type="range"
@@ -498,7 +557,7 @@ function App() {
           Frame: {getFrameNumber(currentTime)}
         </span>
         
-      </div>
+      </div>    
 
       <div 
         className="viewport"

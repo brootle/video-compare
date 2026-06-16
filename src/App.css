@@ -161,6 +161,7 @@ kbd {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  justify-content: center;
 }
 
 .fps-control {
@@ -199,4 +200,20 @@ button {
   background-color: #454545;
   color: white;
   cursor: pointer;
+}
+
+.label-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  padding: 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+
+  margin-bottom: 20px;
+}
+
+.label-panel h3 {
+  margin: 0;
 }
