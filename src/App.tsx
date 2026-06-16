@@ -222,6 +222,20 @@ function App() {
   };  
 
 
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${String(minutes).padStart(2, '0')}:${remainingSeconds
+      .toFixed(3)
+      .padStart(6, '0')}`;
+  };
+
+  const getFrameNumber = (time: number) => {
+    return Math.round(time * 30);
+  };  
+
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -369,9 +383,18 @@ function App() {
           onChange={(event) => handleSeek(Number(event.target.value))}
         />
 
-        <span>
+        {/* <span>
           {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
+        </span> */}
+
+        <span>
+          {formatTime(currentTime)} / {formatTime(duration)}
         </span>
+
+        <span>
+          Frame: {getFrameNumber(currentTime)}
+        </span>
+        
       </div>
 
       <div 
