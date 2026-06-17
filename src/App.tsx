@@ -3,27 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
-// import originalVideo from './assets/videos/demo-original.mp4';
-// import optimizedVideo from './assets/videos/demo-optimized.mp4';
-
-// const originalVideo =
-//   'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4';
-
-// const optimizedVideo =
-//   'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4';
-
-
 type ActiveVideo = 'original' | 'optimized';
 
 function App() {
-
-  // const [originalVideoUrl, setOriginalVideoUrl] = useState(
-  //   'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4'
-  // );
-
-  // const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(
-  //   'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4'
-  // );
 
   const defaultOriginalUrl =
     'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4';
@@ -35,11 +17,38 @@ function App() {
   const MAX_ZOOM = 32;
   const ZOOM_STEP = 0.5;    
 
-  const [originalInputUrl, setOriginalInputUrl] = useState(defaultOriginalUrl);
-  const [optimizedInputUrl, setOptimizedInputUrl] = useState(defaultOptimizedUrl);
+  // const [originalInputUrl, setOriginalInputUrl] = useState(defaultOriginalUrl);
+  // const [optimizedInputUrl, setOptimizedInputUrl] = useState(defaultOptimizedUrl);
 
-  const [originalVideoUrl, setOriginalVideoUrl] = useState(defaultOriginalUrl);
-  const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(defaultOptimizedUrl);  
+  // const [originalVideoUrl, setOriginalVideoUrl] = useState(defaultOriginalUrl);
+  // const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(defaultOptimizedUrl);  
+
+
+  const updateBrowserUrl = (originalUrl: string, optimizedUrl: string) => {
+    const params = new URLSearchParams();
+
+    params.set('original', originalUrl);
+    params.set('optimized', optimizedUrl);
+
+    window.history.replaceState(null, '', `?${params.toString()}`);
+  };
+
+  const getInitialUrl = (key: string, fallback: string) => {
+    const params = new URLSearchParams(window.location.search);
+
+    return params.get(key) || fallback;
+  };    
+
+
+  const initialOriginalUrl = getInitialUrl('original', defaultOriginalUrl);
+  const initialOptimizedUrl = getInitialUrl('optimized', defaultOptimizedUrl);
+
+  const [originalInputUrl, setOriginalInputUrl] = useState(initialOriginalUrl);
+  const [optimizedInputUrl, setOptimizedInputUrl] = useState(initialOptimizedUrl);
+
+  const [originalVideoUrl, setOriginalVideoUrl] = useState(initialOriginalUrl);
+  const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(initialOptimizedUrl);
+
 
   const originalRef = useRef<HTMLVideoElement | null>(null);
   const optimizedRef = useRef<HTMLVideoElement | null>(null);
@@ -189,13 +198,6 @@ function App() {
     handleSeek(nextTime);
   };  
 
-  // const handleZoomIn = () => {
-  //   setZoom((current) => Math.min(current + 0.25, 8));
-  // };
-
-  // const handleZoomOut = () => {
-  //   setZoom((current) => Math.max(current - 0.25, 1));
-  // };
 
   const handleZoomIn = () => {
     setZoom((current) => Math.min(current + ZOOM_STEP, MAX_ZOOM));
@@ -234,6 +236,21 @@ function App() {
   };
 
 
+  // const handleLoadVideos = () => {
+  //   getVideos().forEach((video) => {
+  //     video.pause();
+  //     video.currentTime = 0;
+  //   });
+
+  //   setIsPlaying(false);
+  //   setCurrentTime(0);
+  //   setActiveVideo('original');
+
+  //   setOriginalVideoUrl(originalInputUrl);
+  //   setOptimizedVideoUrl(optimizedInputUrl);
+  // };  
+
+
   const handleLoadVideos = () => {
     getVideos().forEach((video) => {
       video.pause();
@@ -246,6 +263,8 @@ function App() {
 
     setOriginalVideoUrl(originalInputUrl);
     setOptimizedVideoUrl(optimizedInputUrl);
+
+    updateBrowserUrl(originalInputUrl, optimizedInputUrl);
   };  
 
 
@@ -290,8 +309,7 @@ const addLabel = (verdict: Verdict) => {
     link.click();
 
     URL.revokeObjectURL(url);
-  };  
-
+  };    
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -346,31 +364,14 @@ const addLabel = (verdict: Verdict) => {
   ]);  
 
 
+  useEffect(() => {
+    updateBrowserUrl(originalVideoUrl, optimizedVideoUrl);
+  }, []);  
+
+
   return (
     <main className="app">
       <h1>Video Compare</h1>
-
-      {/* <div className="url-inputs">
-        <div>
-          <label htmlFor="original-url">Original Video URL</label>
-          <input
-            id="original-url"
-            type="text"
-            value={originalVideoUrl}
-            onChange={(event) => setOriginalVideoUrl(event.target.value)}
-          />
-        </div>
-
-        <div>
-          <label htmlFor="optimized-url">Optimized Video URL</label>
-          <input
-            id="optimized-url"
-            type="text"
-            value={optimizedVideoUrl}
-            onChange={(event) => setOptimizedVideoUrl(event.target.value)}
-          />
-        </div>
-      </div>       */}
 
       <div className="video-sources">
         <h3>Video Sources</h3>
@@ -395,76 +396,6 @@ const addLabel = (verdict: Verdict) => {
           Load Videos
         </button>
       </div>      
-
-      {/* <div className="url-inputs">
-        <label>
-          Original URL
-          <input
-            value={originalInputUrl}
-            onChange={(event) => setOriginalInputUrl(event.target.value)}
-          />
-        </label>
-
-        <label>
-          Optimized URL
-          <input
-            value={optimizedInputUrl}
-            onChange={(event) => setOptimizedInputUrl(event.target.value)}
-          />
-        </label>
-
-        <button onClick={handleLoadVideos}>Load videos</button>
-      </div>       */}
-
-      {/* <div className="toolbar">
-
-        <div>
-          <button onClick={() => setActiveVideo('original')}>Original</button>
-          <button onClick={() => setActiveVideo('optimized')}>Optimized</button>
-
-          <button onClick={handleToggle}>
-            Toggle A/B
-          </button>          
-
-          <strong>Showing: {activeVideo}</strong>
-        </div>
-
-        <div>
-          <button onClick={handlePlayPause}>
-            {isPlaying ? 'Pause' : 'Play'}
-          </button>
-
-          <button onClick={() => handleFrameStep(-1)}>
-            Previous frame
-          </button>
-
-          <button onClick={() => handleFrameStep(1)}>
-            Next frame
-          </button>    
-
-          <label>
-            FPS
-            <input
-              type="number"
-              min={1}
-              max={240}
-              value={frameRate}
-              onChange={(event) => setFrameRate(Number(event.target.value))}
-            />
-          </label>                     
-        </div>
-
-
-        <div>
-          <button onClick={handleZoomOut}>Zoom out</button>
-          <button onClick={handleZoomIn}>Zoom in</button>
-
-          <strong>Zoom: {zoom.toFixed(1)}x</strong>
-
-          <button onClick={handleResetView}>Reset view</button>               
-        </div>
-   
-      </div> */}
 
       <div className="toolbar">
         <section className="control-group">
