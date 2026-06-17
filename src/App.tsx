@@ -27,8 +27,11 @@ function App() {
   const updateBrowserUrl = (originalUrl: string, optimizedUrl: string) => {
     const params = new URLSearchParams();
 
-    params.set('original', originalUrl);
-    params.set('optimized', optimizedUrl);
+    // params.set('original', originalUrl);
+    // params.set('optimized', optimizedUrl);
+
+    params.set('a', originalUrl);
+    params.set('b', optimizedUrl);
 
     window.history.replaceState(null, '', `?${params.toString()}`);
   };
@@ -40,8 +43,11 @@ function App() {
   };    
 
 
-  const initialOriginalUrl = getInitialUrl('original', defaultOriginalUrl);
-  const initialOptimizedUrl = getInitialUrl('optimized', defaultOptimizedUrl);
+  // const initialOriginalUrl = getInitialUrl('original', defaultOriginalUrl);
+  // const initialOptimizedUrl = getInitialUrl('optimized', defaultOptimizedUrl);
+
+  const initialOriginalUrl = getInitialUrl('a', defaultOriginalUrl);
+  const initialOptimizedUrl = getInitialUrl('b', defaultOptimizedUrl);  
 
   const [originalInputUrl, setOriginalInputUrl] = useState(initialOriginalUrl);
   const [optimizedInputUrl, setOptimizedInputUrl] = useState(initialOptimizedUrl);
@@ -71,17 +77,33 @@ function App() {
 
   const [activeVideo, setActiveVideo] = useState<ActiveVideo>('original');
 
-  type Verdict = 'original' | 'optimized' | 'same';
+  // type Verdict = 'original' | 'optimized' | 'same';
+
+  // type Label = {
+  //   originalUrl: string;
+  //   optimizedUrl: string;
+  //   time: number;
+  //   frame: number;
+  //   verdict: Verdict;
+  //   activeVideo: ActiveVideo;
+  //   createdAt: string;
+  // };
+
+  type Verdict = 'A' | 'B' | 'same';
 
   type Label = {
-    originalUrl: string;
-    optimizedUrl: string;
+    videoAUrl: string;
+    videoBUrl: string;
     time: number;
     frame: number;
     verdict: Verdict;
-    activeVideo: ActiveVideo;
+    activeVideo: 'A' | 'B';
     createdAt: string;
-  };
+  };  
+
+  const getActiveVideoLabel = () => {
+    return activeVideo === 'original' ? 'A' : 'B';
+  };  
 
   const [labels, setLabels] = useState<Label[]>([]);
 
@@ -282,19 +304,33 @@ function App() {
   };  
 
 
-const addLabel = (verdict: Verdict) => {
-  const label: Label = {
-    originalUrl: originalVideoUrl,
-    optimizedUrl: optimizedVideoUrl,
-    time: currentTime,
-    frame: getFrameNumber(currentTime),
-    verdict,
-    activeVideo,
-    createdAt: new Date().toISOString(),
-  };
+// const addLabel = (verdict: Verdict) => {
+//   const label: Label = {
+//     originalUrl: originalVideoUrl,
+//     optimizedUrl: optimizedVideoUrl,
+//     time: currentTime,
+//     frame: getFrameNumber(currentTime),
+//     verdict,
+//     activeVideo,
+//     createdAt: new Date().toISOString(),
+//   };
 
-  setLabels((current) => [label, ...current]);
-};
+//   setLabels((current) => [label, ...current]);
+// };
+
+  const addLabel = (verdict: Verdict) => {
+    const label: Label = {
+      videoAUrl: originalVideoUrl,
+      videoBUrl: optimizedVideoUrl,
+      time: currentTime,
+      frame: getFrameNumber(currentTime),
+      verdict,
+      activeVideo: getActiveVideoLabel(),
+      createdAt: new Date().toISOString(),
+    };
+
+    setLabels((current) => [label, ...current]);
+  };
 
   const exportLabels = () => {
     const blob = new Blob([JSON.stringify(labels, null, 2)], {
@@ -377,7 +413,7 @@ const addLabel = (verdict: Verdict) => {
         <h3>Video Sources</h3>
 
         <label className="url-input">
-          <span className="url-label">Original URL:</span>
+          <span className="url-label">Video A URL:</span>
           <input
             value={originalInputUrl}
             onChange={(event) => setOriginalInputUrl(event.target.value)}
@@ -385,7 +421,7 @@ const addLabel = (verdict: Verdict) => {
         </label>
 
         <label className="url-input">
-          <span className="url-label">Optimized URL:</span>
+          <span className="url-label">Video B URL:</span>
           <input
             value={optimizedInputUrl}
             onChange={(event) => setOptimizedInputUrl(event.target.value)}
@@ -402,12 +438,13 @@ const addLabel = (verdict: Verdict) => {
           <h3>Compare</h3>
 
           <div className="button-row">
-            <button onClick={() => setActiveVideo('original')}>Original</button>
-            <button onClick={() => setActiveVideo('optimized')}>Optimized</button>
+            <button onClick={() => setActiveVideo('original')}>A</button>
+            <button onClick={() => setActiveVideo('optimized')}>B</button>
             <button onClick={handleToggle}>Toggle A/B</button>
           </div>
 
-          <strong>Showing: {activeVideo}</strong>
+          {/* <strong>Showing: {activeVideo}</strong> */}
+           Showing: {activeVideo === 'original' ? 'A' : 'B'}
         </section>
 
         <section className="control-group">
@@ -456,8 +493,12 @@ const addLabel = (verdict: Verdict) => {
         <h3>Labels: {labels.length}</h3>
 
         <div className="button-row">
-          <button onClick={() => addLabel('original')}>Original better</button>
-          <button onClick={() => addLabel('optimized')}>Optimized better</button>
+          {/* <button onClick={() => addLabel('original')}>A better</button>
+          <button onClick={() => addLabel('optimized')}>B better</button>
+          <button onClick={() => addLabel('same')}>Same</button> */}
+
+          <button onClick={() => addLabel('A')}>A better</button>
+          <button onClick={() => addLabel('B')}>B better</button>
           <button onClick={() => addLabel('same')}>Same</button>
           <button onClick={exportLabels} disabled={labels.length === 0}>
             Export JSON
