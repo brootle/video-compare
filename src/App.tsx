@@ -56,6 +56,9 @@ function App() {
   const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(initialOptimizedUrl);
 
 
+  const [showLabelHistory, setShowLabelHistory] = useState(false);
+
+
   const originalRef = useRef<HTMLVideoElement | null>(null);
   const optimizedRef = useRef<HTMLVideoElement | null>(null);
 
@@ -347,6 +350,19 @@ function App() {
     URL.revokeObjectURL(url);
   };    
 
+  const undoLastLabel = () => {
+    setLabels((current) => current.slice(1));
+  };
+
+  const clearLabels = () => {
+    if (!window.confirm('Clear all labels?')) {
+      return;
+    }
+
+    setLabels([]);
+    setShowLabelHistory(false);
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -490,20 +506,93 @@ function App() {
       </div>      
 
       <section className="label-panel">
-        <h3>Labels: {labels.length}</h3>
+        {/* <h3>Labels: {labels.length}</h3> */}
 
         <div className="button-row">
-          {/* <button onClick={() => addLabel('original')}>A better</button>
-          <button onClick={() => addLabel('optimized')}>B better</button>
-          <button onClick={() => addLabel('same')}>Same</button> */}
-
           <button onClick={() => addLabel('A')}>A better</button>
           <button onClick={() => addLabel('B')}>B better</button>
           <button onClick={() => addLabel('same')}>Same</button>
+
+          <button
+            onClick={undoLastLabel}
+            disabled={labels.length === 0}
+          >
+            Undo Last
+          </button>
+
+          <button
+            onClick={clearLabels}
+            disabled={labels.length === 0}
+          >
+            Clear Labels
+          </button>
+
+          <button
+            onClick={() => setShowLabelHistory((current) => !current)}
+            disabled={labels.length === 0}
+          >
+            {showLabelHistory
+              ? `Hide History (${labels.length})`
+              : `Show History (${labels.length})`}
+          </button>          
           <button onClick={exportLabels} disabled={labels.length === 0}>
             Export JSON
           </button>
         </div>
+
+        
+        {/* {labels.length > 0 && (
+          <div className="label-history">
+            <h4>Label history</h4>
+
+            <ul>
+              {labels.slice(0, 5).map((label) => (
+                <li key={label.createdAt}>
+                  <strong>
+                    {label.verdict === 'same' ? 'Same' : `${label.verdict} better`}
+                  </strong>
+
+                  <span>
+                    Frame {label.frame} — {formatTime(label.time)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )} */}
+
+        {/* <div className="label-history-controls">
+          <button
+            onClick={() => setShowLabelHistory((current) => !current)}
+            disabled={labels.length === 0}
+          >
+            {showLabelHistory
+              ? `Hide History (${labels.length})`
+              : `Show History (${labels.length})`}
+          </button>
+        </div> */}
+
+        {showLabelHistory && labels.length > 0 && (
+          <div className="label-history">
+            <h4>Label history</h4>
+
+            <ul>
+              {labels.slice(0, 10).map((label) => (
+                <li key={label.createdAt}>
+                  <strong>
+                    {label.verdict === 'same'
+                      ? 'Same'
+                      : `${label.verdict} better`}
+                  </strong>
+
+                  <span>
+                    Frame {label.frame} — {formatTime(label.time)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}        
 
       </section>        
 
