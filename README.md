@@ -1,73 +1,117 @@
-# React + TypeScript + Vite
+# Video Compare
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Video Compare is a browser-based tool for visual comparison of two video sources. It is designed to support human quality validation for video encoding workflows, including Content-Aware Encoding model evaluation.
 
-Currently, two official plugins are available:
+The tool allows reviewers to quickly compare Video A and Video B, inspect individual frames, zoom into fine details, and capture quality judgments for later analysis.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+### Video Comparison
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* Load two video URLs (Video A and Video B)
+* Instant A/B switching in a shared viewport
+* Synchronized playback and seeking
+* Frame-accurate pause synchronization using `requestVideoFrameCallback()`
+* Frame-by-frame stepping
+* Adjustable frame rate for frame stepping
 
-## Expanding the ESLint configuration
+### Inspection Tools
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+* Deep zoom for pixel-level inspection
+* Pan while zoomed
+* Shared zoom and pan state across Video A and Video B
+* Current timestamp display
+* Current frame number display
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Reviewer Workflow
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+* Label comparison results:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+  * A Better
+  * B Better
+  * Same
+* Label history
+* Undo last label
+* Clear labels
+* Export labels as JSON
+
+### Sharing
+
+* Video URLs are stored in browser query parameters
+* Comparison sessions can be shared via URL
+
+## Keyboard Shortcuts
+
+| Shortcut    | Action         |
+| ----------- | -------------- |
+| Space       | Toggle A/B     |
+| K           | Play / Pause   |
+| Left Arrow  | Previous Frame |
+| Right Arrow | Next Frame     |
+| +           | Zoom In        |
+| -           | Zoom Out       |
+| R           | Reset View     |
+
+## Label Export Format
+
+Example:
+
+```json
+{
+  "videoAUrl": "https://example.com/video-a.mp4",
+  "videoBUrl": "https://example.com/video-b.mp4",
+  "time": 12.433,
+  "frame": 373,
+  "verdict": "B",
+  "activeVideo": "A",
+  "createdAt": "2026-06-18T12:00:00.000Z"
+}
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Install dependencies:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+```
+
+Run locally:
+
+```bash
+npm run dev
+```
+
+Build production bundle:
+
+```bash
+npm run build
+```
+
+## Deployment
+
+Preview deployment:
+
+```bash
+netlify deploy
+```
+
+Production deployment:
+
+```bash
+netlify deploy --prod
+```
+
+## Roadmap
+
+* Timestamp sharing via URL
+* Labeling keyboard shortcuts
+* Side-by-side comparison mode
+* FPS auto-detection
+* HLS/DASH support
+* Blind A/B testing mode
+* CSV export
+* Reviewer statistics and reporting
+
+```
 ```
