@@ -112,6 +112,3 @@ netlify deploy --prod
 * Blind A/B testing mode
 * CSV export
 * Reviewer statistics and reporting
-
-```
-```
