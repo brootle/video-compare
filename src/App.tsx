@@ -475,6 +475,23 @@ function App() {
       if (event.key.toLowerCase() === 'r') {
         handleResetView();
       }
+
+      if (event.key === '1') {
+        addLabel('A');
+      }
+
+      if (event.key === '2') {
+        addLabel('B');
+      }
+
+      if (event.key === '3') {
+        addLabel('same');
+      }
+
+      if (event.key.toLowerCase() === 'z') {
+        undoLastLabel();
+      }
+
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -745,6 +762,7 @@ function App() {
 
       </div>
 
+      <h4>Playback & Navigation</h4>
       <div className="shortcuts">
         <span><kbd>Space</kbd> Toggle A/B</span>
         <span><kbd>K</kbd> Play / Pause</span>
@@ -753,7 +771,15 @@ function App() {
         <span><kbd>+</kbd> Zoom in</span>
         <span><kbd>-</kbd> Zoom out</span>
         <span><kbd>R</kbd> Reset view</span>
-      </div>      
+      </div>  
+
+      <h4>Labeling</h4>
+      <div className="shortcuts">
+        <span><kbd>1</kbd> A better</span>
+        <span><kbd>2</kbd> B better</span>
+        <span><kbd>3</kbd> Same</span>
+        <span><kbd>Z</kbd> Undo label</span>
+      </div>            
     </main>
   );
 }
