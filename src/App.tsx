@@ -17,34 +17,62 @@ function App() {
   const MAX_ZOOM = 32;
   const ZOOM_STEP = 0.5;    
 
-  // const [originalInputUrl, setOriginalInputUrl] = useState(defaultOriginalUrl);
-  // const [optimizedInputUrl, setOptimizedInputUrl] = useState(defaultOptimizedUrl);
-
-  // const [originalVideoUrl, setOriginalVideoUrl] = useState(defaultOriginalUrl);
-  // const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(defaultOptimizedUrl);  
 
 
-  const updateBrowserUrl = (originalUrl: string, optimizedUrl: string) => {
+  // const updateBrowserUrl = (originalUrl: string, optimizedUrl: string) => {
+  //   const params = new URLSearchParams();
+
+  //   params.set('a', originalUrl);
+  //   params.set('b', optimizedUrl);
+
+  //   window.history.replaceState(null, '', `?${params.toString()}`);
+  // };
+
+  // const updateBrowserUrl = (
+  //   videoAUrl: string,
+  //   videoBUrl: string,
+  //   time?: number
+  // ) => {
+  //   const params = new URLSearchParams();
+
+  //   params.set('a', videoAUrl);
+  //   params.set('b', videoBUrl);
+
+  //   if (typeof time === 'number') {
+  //     params.set('t', time.toFixed(3));
+  //   }
+
+  //   window.history.replaceState(null, '', `?${params.toString()}`);
+  // };  
+
+  const updateBrowserUrl = (
+    videoAUrl: string,
+    videoBUrl: string,
+    time: number
+  ) => {
     const params = new URLSearchParams();
 
-    // params.set('original', originalUrl);
-    // params.set('optimized', optimizedUrl);
+    params.set('a', videoAUrl);
+    params.set('b', videoBUrl);
+    //params.set('t', time.toFixed(3));
 
-    params.set('a', originalUrl);
-    params.set('b', optimizedUrl);
+    if (typeof time === 'number') {
+      params.set('t', time.toFixed(3));
+    }    
 
     window.history.replaceState(null, '', `?${params.toString()}`);
-  };
+  };  
+
+  const getInitialTime = () => {
+    const params = new URLSearchParams(window.location.search);
+    return Number(params.get('t') || 0);
+  };  
 
   const getInitialUrl = (key: string, fallback: string) => {
     const params = new URLSearchParams(window.location.search);
 
     return params.get(key) || fallback;
   };    
-
-
-  // const initialOriginalUrl = getInitialUrl('original', defaultOriginalUrl);
-  // const initialOptimizedUrl = getInitialUrl('optimized', defaultOptimizedUrl);
 
   const initialOriginalUrl = getInitialUrl('a', defaultOriginalUrl);
   const initialOptimizedUrl = getInitialUrl('b', defaultOptimizedUrl);  
@@ -112,7 +140,11 @@ function App() {
 
   const [isPlaying, setIsPlaying] = useState(false);
 
-  const [currentTime, setCurrentTime] = useState(0);
+  // const [currentTime, setCurrentTime] = useState(0);
+
+  const initialTime = getInitialTime();
+  const [currentTime, setCurrentTime] = useState(initialTime);
+
   const [duration, setDuration] = useState(0);
 
   const getVideos = () => {
@@ -165,12 +197,28 @@ function App() {
 
       setCurrentTime(time);
       setIsPlaying(false);
+
+      updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, time);
+
       return;
     }
 
     await Promise.all(videos.map((video) => video.play()));
     setIsPlaying(true);
   };
+
+  // const handleSeek = (time: number) => {
+  //   getVideos().forEach((video) => {
+  //     video.currentTime = time;
+  //   });
+
+  //   updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, time);
+
+  //   originalFrameTimeRef.current = time;
+  //   optimizedFrameTimeRef.current = time;
+
+  //   setCurrentTime(time);
+  // };
 
   const handleSeek = (time: number) => {
     getVideos().forEach((video) => {
@@ -181,13 +229,18 @@ function App() {
     optimizedFrameTimeRef.current = time;
 
     setCurrentTime(time);
-  };
+    updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, time);
+  };  
 
   const handleLoadedMetadata = (
     event: React.SyntheticEvent<HTMLVideoElement>,
     videoType: ActiveVideo
   ) => {
     const video = event.currentTarget;
+
+    if (initialTime > 0) {
+      video.currentTime = initialTime;
+    }    
 
     setDuration(video.duration);
 
@@ -276,20 +329,38 @@ function App() {
   // };  
 
 
+  // const handleLoadVideos = () => {
+  //   getVideos().forEach((video) => {
+  //     video.pause();
+  //     video.currentTime = 0;
+  //   });
+
+  //   setIsPlaying(false);
+  //   setCurrentTime(0);
+  //   setActiveVideo('original');
+
+  //   setOriginalVideoUrl(originalInputUrl);
+  //   setOptimizedVideoUrl(optimizedInputUrl);
+
+  //   updateBrowserUrl(originalInputUrl, optimizedInputUrl);
+  // };  
+
   const handleLoadVideos = () => {
+    const startTime = 0;
+
     getVideos().forEach((video) => {
       video.pause();
-      video.currentTime = 0;
+      video.currentTime = startTime;
     });
 
     setIsPlaying(false);
-    setCurrentTime(0);
+    setCurrentTime(startTime);
     setActiveVideo('original');
 
     setOriginalVideoUrl(originalInputUrl);
     setOptimizedVideoUrl(optimizedInputUrl);
 
-    updateBrowserUrl(originalInputUrl, optimizedInputUrl);
+    updateBrowserUrl(originalInputUrl, optimizedInputUrl, startTime);
   };  
 
 
@@ -363,6 +434,11 @@ function App() {
     setShowLabelHistory(false);
   };
 
+  const copyShareLink = async () => {
+    updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, currentTime);
+    await navigator.clipboard.writeText(window.location.href);
+  };  
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -417,7 +493,8 @@ function App() {
 
 
   useEffect(() => {
-    updateBrowserUrl(originalVideoUrl, optimizedVideoUrl);
+    //updateBrowserUrl(originalVideoUrl, optimizedVideoUrl);
+    updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, initialTime);
   }, []);  
 
 
@@ -617,6 +694,10 @@ function App() {
         <span>
           Frame: {getFrameNumber(currentTime)}
         </span>
+
+        <button onClick={copyShareLink}>
+          Copy Share Link
+        </button>        
         
       </div>    
 
