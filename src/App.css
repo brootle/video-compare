@@ -183,9 +183,20 @@ kbd {
 
 .url-input {
   display: flex;
-  flex-direction: column;
   gap: 4px;
   width: 100%;
+  align-items: center;
+}
+
+.url-input .video-status {
+  min-width: 80px;
+  text-align: right;
+}
+
+.url-label {
+  min-width: 120px;
+  text-align: left;
+
 }
 
 .url-input input {

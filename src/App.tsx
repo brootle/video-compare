@@ -111,6 +111,9 @@ function App() {
 
   const [viewMode, setViewMode] = useState<ViewMode>('ab');
 
+  const [videoAStatus, setVideoAStatus] = useState('Loading');
+  const [videoBStatus, setVideoBStatus] = useState('Loading');
+
   // type Verdict = 'original' | 'optimized' | 'same';
 
   // type Label = {
@@ -537,6 +540,7 @@ function App() {
             value={originalInputUrl}
             onChange={(event) => setOriginalInputUrl(event.target.value)}
           />
+          <span className="video-status">{videoAStatus}</span>
         </label>
 
         <label className="url-input">
@@ -545,7 +549,9 @@ function App() {
             value={optimizedInputUrl}
             onChange={(event) => setOptimizedInputUrl(event.target.value)}
           />
+          <span className="video-status">{videoBStatus}</span>
         </label>
+    
 
         <button onClick={handleLoadVideos}>
           Load Videos
@@ -780,6 +786,9 @@ function App() {
               handleLoadedMetadata(event, 'original');
             }}
             onTimeUpdate={handleTimeUpdate}
+
+            onCanPlay={() => setVideoAStatus('Ready')}
+            onError={() => setVideoAStatus('Error')}
           />
 
           <video
@@ -801,6 +810,9 @@ function App() {
             onLoadedMetadata={(event) => {
               handleLoadedMetadata(event, 'optimized');
             }}
+            
+            onCanPlay={() => setVideoBStatus('Ready')}
+            onError={() => setVideoBStatus('Error')}            
           />          
         </div>
 
