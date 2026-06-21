@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
 type ActiveVideo = 'original' | 'optimized';
+type ViewMode = 'ab' | 'side-by-side';
 
 function App() {
 
@@ -107,6 +108,8 @@ function App() {
   const frameStep = 1 / frameRate;
 
   const [activeVideo, setActiveVideo] = useState<ActiveVideo>('original');
+
+  const [viewMode, setViewMode] = useState<ViewMode>('ab');
 
   // type Verdict = 'original' | 'optimized' | 'same';
 
@@ -439,6 +442,12 @@ function App() {
     await navigator.clipboard.writeText(window.location.href);
   };  
 
+  const handleToggleViewMode = () => {
+    setViewMode((current) =>
+      current === 'ab' ? 'side-by-side' : 'ab'
+    );
+  };  
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
@@ -551,10 +560,27 @@ function App() {
             <button onClick={() => setActiveVideo('original')}>A</button>
             <button onClick={() => setActiveVideo('optimized')}>B</button>
             <button onClick={handleToggle}>Toggle A/B</button>
+
+            {/* <button onClick={() => setViewMode('ab')}>
+              A/B mode
+            </button> */}
+
+            {/* <button onClick={() => setViewMode('side-by-side')}>
+              Side-by-side
+            </button>           */}
+
+            {/* <button onClick={handleToggleViewMode}>
+              Mode: {viewMode === 'ab' ? 'A/B' : 'Side-by-side'}
+            </button>   */}
+
+            <button onClick={handleToggleViewMode}>
+              View Mode
+            </button>              
           </div>
 
           {/* <strong>Showing: {activeVideo}</strong> */}
            Showing: {activeVideo === 'original' ? 'A' : 'B'}
+
         </section>
 
         <section className="control-group">
@@ -719,7 +745,8 @@ function App() {
       </div>    
 
       <div 
-        className="viewport"
+        // className="viewport"
+        className={`viewport ${viewMode === 'side-by-side' ? 'side-by-side' : ''}`}
 
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
@@ -735,7 +762,16 @@ function App() {
         >
           <video
             ref={originalRef}
-            className={activeVideo === 'original' ? 'video visible' : 'video hidden'}
+            // className={activeVideo === 'original' ? 'video visible' : 'video hidden'}
+
+            className={
+              viewMode === 'side-by-side'
+                ? 'video side-video'
+                : activeVideo === 'original'
+                  ? 'video visible'
+                  : 'video hidden'
+            }
+
             //src={originalVideo}
             src={originalVideoUrl}
             preload="auto"
@@ -748,7 +784,16 @@ function App() {
 
           <video
             ref={optimizedRef}
-            className={activeVideo === 'optimized' ? 'video visible' : 'video hidden'}
+            // className={activeVideo === 'optimized' ? 'video visible' : 'video hidden'}
+
+            className={
+              viewMode === 'side-by-side'
+                ? 'video side-video'
+                : activeVideo === 'optimized'
+                  ? 'video visible'
+                  : 'video hidden'
+            }            
+
             //src={optimizedVideo}
             src={optimizedVideoUrl}
             preload="auto"
