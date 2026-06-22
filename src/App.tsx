@@ -745,7 +745,7 @@ const getFrameNumber = (time: number) => {
         </span>
 
         <span>
-          Frame: {getFrameNumber(currentTime)}
+          Estimated frame: {getFrameNumber(currentTime)}
         </span>
 
         <button onClick={copyShareLink}>
