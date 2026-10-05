@@ -69,7 +69,7 @@ function App() {
   const originalRef = useRef<HTMLVideoElement | null>(null);
   const optimizedRef = useRef<HTMLVideoElement | null>(null);
 
-  const pendingSeekTimeRef = useRef<number | null>(null);
+  // const pendingSeekTimeRef = useRef<number | null>(null);
 
   const originalFrameTimeRef = useRef(0);
   const optimizedFrameTimeRef = useRef(0);
@@ -102,17 +102,37 @@ function App() {
   });  
 
 
-  const getUrlForSource = (source: 'original' | 'optimized') => {
+  // const getUrlForSource = (source: 'original' | 'optimized') => {
+  //   return source === 'original' ? originalVideoUrl : optimizedVideoUrl;
+  // };
+
+  // const videoAUrl = blindMode
+  //   ? getUrlForSource(blindMapping.A)
+  //   : originalVideoUrl;
+
+  // const videoBUrl = blindMode
+  //   ? getUrlForSource(blindMapping.B)
+  //   : optimizedVideoUrl;  
+
+  const getUrlForSource = (source: ActiveVideo) => {
     return source === 'original' ? originalVideoUrl : optimizedVideoUrl;
   };
 
-  const videoAUrl = blindMode
-    ? getUrlForSource(blindMapping.A)
-    : originalVideoUrl;
+  const getSourceForLabel = (label: 'A' | 'B'): ActiveVideo => {
+    if (!blindMode) {
+      return label === 'A' ? 'original' : 'optimized';
+    }
 
-  const videoBUrl = blindMode
-    ? getUrlForSource(blindMapping.B)
-    : optimizedVideoUrl;  
+    return blindMapping[label];
+  };
+
+  const getLabelForSource = (source: ActiveVideo): 'A' | 'B' => {
+    return getSourceForLabel('A') === source ? 'A' : 'B';
+  };  
+
+  const getSideBySideOrder = (source: ActiveVideo) => {
+    return getSourceForLabel('A') === source ? 0 : 1;
+  };  
 
   type Verdict = 'A' | 'B' | 'same';
 
@@ -128,8 +148,12 @@ function App() {
     createdAt: string;
   };  
 
+  // const getActiveVideoLabel = () => {
+  //   return activeVideo === 'original' ? 'A' : 'B';
+  // };  
+
   const getActiveVideoLabel = () => {
-    return activeVideo === 'original' ? 'A' : 'B';
+    return getLabelForSource(activeVideo);
   };  
 
   const [labels, setLabels] = useState<Label[]>([]);
@@ -247,11 +271,15 @@ function App() {
 
     setDuration(video.duration);
 
-    const pendingSeekTime = pendingSeekTimeRef.current;
+    // const pendingSeekTime = pendingSeekTimeRef.current;
 
-    if (pendingSeekTime !== null) {
-      video.currentTime = pendingSeekTime;
-    }
+    // if (pendingSeekTime !== null) {
+    //   video.currentTime = pendingSeekTime;
+    // }
+
+    if (initialTime > 0) {
+      video.currentTime = initialTime;
+    }    
 
     if (videoType === 'original') {
       originalFrameTimeRef.current = video.currentTime;
@@ -389,8 +417,10 @@ const getFrameNumber = (time: number) => {
     const label: Label = {
       // videoAUrl: originalVideoUrl,
       // videoBUrl: optimizedVideoUrl,
-      videoAUrl,
-      videoBUrl,      
+      // videoAUrl,
+      // videoBUrl,      
+      videoAUrl: getUrlForSource(getSourceForLabel('A')),
+      videoBUrl: getUrlForSource(getSourceForLabel('B')),      
       time: currentTime,
       frame: getFrameNumber(currentTime),
       verdict,
@@ -450,36 +480,24 @@ const getFrameNumber = (time: number) => {
       : { A: 'original', B: 'optimized' };
   };  
 
-  // const handleBlindModeToggle = () => {
-  //   setBlindMode((current) => {
-  //     const next = !current;
-
-  //     if (next) {
-  //       setBlindMapping(createBlindMapping());
-  //     } else {
-  //       setBlindMapping({
-  //         A: 'original',
-  //         B: 'optimized',
-  //       });
-  //     }
-
-  //     setActiveVideo('original');
-
-  //     return next;
-  //   });
-  // };  
 
   // const handleBlindModeToggle = () => {
-  //   const nextBlindMode = !blindMode;
+  //   const active = activeVideo === 'original'
+  //     ? originalRef.current
+  //     : optimizedRef.current;
+
+  //   const time = active?.currentTime ?? currentTime;
+
+  //   pendingSeekTimeRef.current = time;
 
   //   getVideos().forEach((video) => {
   //     video.pause();
-  //     video.currentTime = 0;
   //   });
 
   //   setIsPlaying(false);
-  //   setCurrentTime(0);
-  //   setActiveVideo('original');
+  //   setCurrentTime(time);
+
+  //   const nextBlindMode = !blindMode;
 
   //   if (nextBlindMode) {
   //     setBlindMapping(createBlindMapping());
@@ -491,38 +509,29 @@ const getFrameNumber = (time: number) => {
   //   }
 
   //   setBlindMode(nextBlindMode);
-  // };
-
+  // };  
 
   const handleBlindModeToggle = () => {
-    const active = activeVideo === 'original'
-      ? originalRef.current
-      : optimizedRef.current;
+    if (!blindMode) {
+      const mapping = createBlindMapping();
 
-    const time = active?.currentTime ?? currentTime;
+      setBlindMapping(mapping);
+      setBlindMode(true);
 
-    pendingSeekTimeRef.current = time;
-
-    getVideos().forEach((video) => {
-      video.pause();
-    });
-
-    setIsPlaying(false);
-    setCurrentTime(time);
-
-    const nextBlindMode = !blindMode;
-
-    if (nextBlindMode) {
-      setBlindMapping(createBlindMapping());
+      // Always start Blind Mode showing A.
+      setActiveVideo(mapping.A);
     } else {
+      setBlindMode(false);
+
       setBlindMapping({
         A: 'original',
         B: 'optimized',
       });
-    }
 
-    setBlindMode(nextBlindMode);
-  };  
+      // Back to normal A.
+      setActiveVideo('original');
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -640,21 +649,20 @@ const getFrameNumber = (time: number) => {
           <h3>Compare</h3>
 
           <div className="button-row">
-            <button onClick={() => setActiveVideo('original')}>A</button>
+            {/* <button onClick={() => setActiveVideo('original')}>A</button>
             <button onClick={() => setActiveVideo('optimized')}>B</button>
+            <button onClick={handleToggle}>Toggle A/B</button> */}
+
+            <button onClick={() => setActiveVideo(getSourceForLabel('A'))}>
+              A
+            </button>
+
+            <button onClick={() => setActiveVideo(getSourceForLabel('B'))}>
+              B
+            </button>
+
             <button onClick={handleToggle}>Toggle A/B</button>
 
-            {/* <button onClick={() => setViewMode('ab')}>
-              A/B mode
-            </button> */}
-
-            {/* <button onClick={() => setViewMode('side-by-side')}>
-              Side-by-side
-            </button>           */}
-
-            {/* <button onClick={handleToggleViewMode}>
-              Mode: {viewMode === 'ab' ? 'A/B' : 'Side-by-side'}
-            </button>   */}
 
             <button onClick={handleToggleViewMode}>
               View Mode
@@ -666,8 +674,11 @@ const getFrameNumber = (time: number) => {
               
           </div>
 
-          {/* <strong>Showing: {activeVideo}</strong> */}
-           Showing: {activeVideo === 'original' ? 'A' : 'B'}
+
+           {/* Showing: {activeVideo === 'original' ? 'A' : 'B'} */}
+
+
+           Showing: {getActiveVideoLabel()}
 
              
         </section>
@@ -861,9 +872,15 @@ const getFrameNumber = (time: number) => {
                   : 'video hidden'
             }
 
+            style={
+              viewMode === 'side-by-side'
+                ? { order: getSideBySideOrder('original') }
+                : undefined
+            }            
+
             //src={originalVideo}
-            // src={originalVideoUrl}
-            src={videoAUrl}
+            src={originalVideoUrl}
+            // src={videoAUrl}
             preload="auto"
             muted
             onLoadedMetadata={(event) => {
@@ -875,7 +892,7 @@ const getFrameNumber = (time: number) => {
 
             onCanPlay={() => {
               setVideoAStatus('Ready');
-              pendingSeekTimeRef.current = null;
+              // pendingSeekTimeRef.current = null;
             }}            
 
             onError={() => setVideoAStatus('Error')}
@@ -893,9 +910,15 @@ const getFrameNumber = (time: number) => {
                   : 'video hidden'
             }            
 
+            style={
+              viewMode === 'side-by-side'
+                ? { order: getSideBySideOrder('optimized') }
+                : undefined
+            }            
+
             //src={optimizedVideo}
-            // src={optimizedVideoUrl}
-            src={videoBUrl}
+            src={optimizedVideoUrl}
+            //src={videoBUrl}
             preload="auto"
             muted
             onLoadedMetadata={(event) => {
@@ -905,7 +928,7 @@ const getFrameNumber = (time: number) => {
             // onCanPlay={() => setVideoBStatus('Ready')}
             onCanPlay={() => {
               setVideoBStatus('Ready');
-              pendingSeekTimeRef.current = null;
+              // pendingSeekTimeRef.current = null;
             }}         
 
             onError={() => setVideoBStatus('Error')}            
