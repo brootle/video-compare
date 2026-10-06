@@ -69,6 +69,11 @@ function App() {
   const originalRef = useRef<HTMLVideoElement | null>(null);
   const optimizedRef = useRef<HTMLVideoElement | null>(null);
 
+  const bufferingRef = useRef(false);
+  const shouldResumeAfterBufferingRef = useRef(false);
+
+  const [bufferingVideo, setBufferingVideo] = useState<ActiveVideo | null>(null);
+
   // const pendingSeekTimeRef = useRef<number | null>(null);
 
   const originalFrameTimeRef = useRef(0);
@@ -93,6 +98,10 @@ function App() {
 
   const [videoAStatus, setVideoAStatus] = useState('Loading');
   const [videoBStatus, setVideoBStatus] = useState('Loading');
+
+  const videosReady =
+    videoAStatus === 'Ready' &&
+    videoBStatus === 'Ready';  
 
   const [blindMode, setBlindMode] = useState(false);
 
@@ -173,6 +182,173 @@ function App() {
     );
   };
 
+  const areVideosPlayable = () => {
+    const videos = getVideos();
+
+    return (
+      videos.length === 2 &&
+      videos.every((video) => video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA)
+    );
+  };  
+
+  const waitForSeek = (video: HTMLVideoElement) => {
+    return new Promise<void>((resolve) => {
+      if (!video.seeking) {
+        resolve();
+        return;
+      }
+
+      video.addEventListener(
+        'seeked',
+        () => resolve(),
+        { once: true }
+      );
+    });
+  };  
+
+  // const handleVideoWaiting = () => {
+  //   if (!isPlaying || bufferingRef.current) return;
+
+  //   bufferingRef.current = true;
+  //   shouldResumeAfterBufferingRef.current = true;
+
+  //   const time = getActiveFrameTime();
+
+  //   getVideos().forEach((video) => {
+  //     video.pause();
+  //     video.currentTime = time;
+  //   });
+
+  //   setCurrentTime(time);
+  // };  
+
+  // const handleVideoWaiting = () => {
+  //   if (!isPlaying || bufferingRef.current) return;
+
+  //   bufferingRef.current = true;
+  //   shouldResumeAfterBufferingRef.current = true;
+
+  //   getVideos().forEach((video) => {
+  //     video.pause();
+  //   });
+  // };  
+
+  const handleVideoWaiting = (videoType: ActiveVideo) => {
+    if (!isPlaying || bufferingRef.current) return;
+
+    bufferingRef.current = true;
+    shouldResumeAfterBufferingRef.current = true;
+
+    setBufferingVideo(videoType);
+
+    getVideos().forEach((video) => {
+      video.pause();
+    });
+  };  
+
+  // const handleVideoCanPlay = async (
+  //   videoType: 'original' | 'optimized'
+  // ) => {
+  //   if (videoType === 'original') {
+  //     setVideoAStatus('Ready');
+  //   } else {
+  //     setVideoBStatus('Ready');
+  //   }
+
+  //   if (
+  //     !bufferingRef.current ||
+  //     !shouldResumeAfterBufferingRef.current ||
+  //     !areVideosPlayable()
+  //   ) {
+  //     return;
+  //   }
+
+  //   const videos = getVideos();
+
+  //   const syncTime = getActiveFrameTime();
+
+  //   videos.forEach((video) => {
+  //     video.currentTime = syncTime;
+  //   });
+
+  //   try {
+  //     await Promise.all(videos.map((video) => video.play()));
+
+  //     bufferingRef.current = false;
+  //     shouldResumeAfterBufferingRef.current = false;
+  //   } catch {
+  //     // Browser may reject playback.
+  //   }
+  // };  
+
+  const handleVideoCanPlay = async (
+    videoType: ActiveVideo
+  ) => {
+    if (videoType === 'original') {
+      setVideoAStatus('Ready');
+    } else {
+      setVideoBStatus('Ready');
+    }
+
+    if (
+      !bufferingRef.current ||
+      !shouldResumeAfterBufferingRef.current ||
+      !areVideosPlayable()
+    ) {
+      return;
+    }
+
+    const videos = getVideos();
+
+    bufferingRef.current = false;
+
+    // const syncTime = Math.min(
+    //   originalRef.current?.currentTime ?? currentTime,
+    //   optimizedRef.current?.currentTime ?? currentTime
+    // );
+
+    const syncTime = Math.min(
+      originalRef.current?.currentTime ?? currentTime,
+      optimizedRef.current?.currentTime ?? currentTime
+    );    
+
+    videos.forEach((video) => {
+      if (Math.abs(video.currentTime - syncTime) > 0.001) {
+        video.currentTime = syncTime;
+      }
+    });
+
+    await Promise.all(videos.map(waitForSeek));
+
+    if (!shouldResumeAfterBufferingRef.current) {
+      return;
+    }
+
+    // try {
+    //   await Promise.all(
+    //     videos.map((video) => video.play())
+    //   );
+
+    //   shouldResumeAfterBufferingRef.current = false;
+    // } catch {
+    //   shouldResumeAfterBufferingRef.current = false;
+    //   setIsPlaying(false);
+    // }
+
+    try {
+      await Promise.all(
+        videos.map((video) => video.play())
+      );
+
+      shouldResumeAfterBufferingRef.current = false;
+      setBufferingVideo(null);
+    } catch {
+      shouldResumeAfterBufferingRef.current = false;
+      setBufferingVideo(null);
+      setIsPlaying(false);
+    }    
+  };
+
   const getActiveFrameTime = () => {
     return activeVideo === 'original'
       ? originalFrameTimeRef.current
@@ -205,9 +381,17 @@ function App() {
   };  
 
   const handlePlayPause = async () => {
+    if (!videosReady) return;
+
     const videos = getVideos();
 
     if (isPlaying) {
+
+      shouldResumeAfterBufferingRef.current = false;
+      bufferingRef.current = false;
+
+      setBufferingVideo(null);
+
       const time = getActiveFrameTime();
 
       videos.forEach((video) => {
@@ -355,6 +539,9 @@ function App() {
   const handleLoadVideos = () => {
     const startTime = 0;
 
+    setVideoAStatus('Loading');
+    setVideoBStatus('Loading');    
+
     getVideos().forEach((video) => {
       video.pause();
       video.currentTime = startTime;
@@ -363,6 +550,8 @@ function App() {
     setIsPlaying(false);
     setCurrentTime(startTime);
     setActiveVideo('original');
+
+    setBufferingVideo(null);
 
     setOriginalVideoUrl(originalInputUrl);
     setOptimizedVideoUrl(optimizedInputUrl);
@@ -687,9 +876,16 @@ const getFrameNumber = (time: number) => {
           <h3>Playback</h3>
 
           <div className="button-row">
-            <button onClick={handlePlayPause}>
+            {/* <button onClick={handlePlayPause}>
               {isPlaying ? 'Pause' : 'Play'}
-            </button>
+            </button> */}
+
+            <button
+              onClick={handlePlayPause}
+              disabled={!videosReady}
+            >
+              {videosReady ? (isPlaying ? 'Pause' : 'Play') : 'Loading...'}
+            </button>            
 
             <button onClick={() => handleFrameStep(-1)}>
               Previous frame
@@ -854,6 +1050,17 @@ const getFrameNumber = (time: number) => {
         onMouseLeave={handleMouseUp}
       >
 
+        {bufferingVideo && (
+          <div className="buffering-overlay">
+            <div className="buffering-indicator">
+              <span className="buffering-spinner" />
+              <span>
+                Buffering video {getLabelForSource(bufferingVideo)}…
+              </span>
+            </div>
+          </div>
+        )}        
+
         <div
           className="video-transform"
           style={{
@@ -890,10 +1097,15 @@ const getFrameNumber = (time: number) => {
 
             // onCanPlay={() => setVideoAStatus('Ready')}
 
-            onCanPlay={() => {
-              setVideoAStatus('Ready');
-              // pendingSeekTimeRef.current = null;
-            }}            
+            // onCanPlay={() => {
+            //   setVideoAStatus('Ready');
+            //   // pendingSeekTimeRef.current = null;
+            // }}            
+
+            onCanPlay={() => handleVideoCanPlay('original')}
+
+            // onWaiting={handleVideoWaiting}
+            onWaiting={() => handleVideoWaiting('original')}
 
             onError={() => setVideoAStatus('Error')}
           />
@@ -926,10 +1138,14 @@ const getFrameNumber = (time: number) => {
             }}
             
             // onCanPlay={() => setVideoBStatus('Ready')}
-            onCanPlay={() => {
-              setVideoBStatus('Ready');
-              // pendingSeekTimeRef.current = null;
-            }}         
+            // onCanPlay={() => {
+            //   setVideoBStatus('Ready');
+            //   // pendingSeekTimeRef.current = null;
+            // }}         
+            onCanPlay={() => handleVideoCanPlay('optimized')}
+
+            // onWaiting={handleVideoWaiting}
+            onWaiting={() => handleVideoWaiting('optimized')}
 
             onError={() => setVideoBStatus('Error')}            
           />          
