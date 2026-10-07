@@ -15,6 +15,12 @@ import {
   updateBrowserUrl,
 } from './utils/url';
 
+import {
+  formatTime,
+  getFrameNumber,
+  createBlindMapping,
+} from './utils/video';
+
 import type {
   ActiveVideo,
   ViewMode,
@@ -405,20 +411,20 @@ function App() {
   };  
 
 
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+//   const formatTime = (seconds: number) => {
+//     const minutes = Math.floor(seconds / 60);
+//     const remainingSeconds = seconds % 60;
 
-    return `${String(minutes).padStart(2, '0')}:${remainingSeconds
-      .toFixed(3)
-      .padStart(6, '0')}`;
-  };
+//     return `${String(minutes).padStart(2, '0')}:${remainingSeconds
+//       .toFixed(3)
+//       .padStart(6, '0')}`;
+//   };
 
 
 
-const getFrameNumber = (time: number) => {
-  return Math.floor(time * frameRate);
-};  
+// const getFrameNumber = (time: number) => {
+//   return Math.floor(time * frameRate);
+// };  
 
 
 
@@ -429,7 +435,7 @@ const getFrameNumber = (time: number) => {
       videoAUrl: getUrlForSource(getSourceForLabel('A')),
       videoBUrl: getUrlForSource(getSourceForLabel('B')),      
       time: currentTime,
-      frame: getFrameNumber(currentTime),
+      frame: getFrameNumber(currentTime, frameRate),
       verdict,
       activeVideo: getActiveVideoLabel(),
       blindMode,
@@ -478,15 +484,6 @@ const getFrameNumber = (time: number) => {
       current === 'ab' ? 'side-by-side' : 'ab'
     );
   };  
-
-  const createBlindMapping = (): BlindMapping => {
-    const shouldSwap = Math.random() < 0.5;
-
-    return shouldSwap
-      ? { A: 'optimized', B: 'original' }
-      : { A: 'original', B: 'optimized' };
-  };  
-
 
   const handleBlindModeToggle = () => {
     if (!blindMode) {
@@ -759,7 +756,7 @@ const getFrameNumber = (time: number) => {
         </span>
 
         <span>
-          Estimated frame: {getFrameNumber(currentTime)}
+          Estimated frame: {getFrameNumber(currentTime, frameRate)}
         </span>
 
         <button onClick={copyShareLink}>
