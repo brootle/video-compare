@@ -33,7 +33,6 @@ function App() {
 
     params.set('a', videoAUrl);
     params.set('b', videoBUrl);
-    //params.set('t', time.toFixed(3));
 
     if (typeof time === 'number') {
       params.set('t', time.toFixed(3));
@@ -111,18 +110,6 @@ function App() {
   });  
 
 
-  // const getUrlForSource = (source: 'original' | 'optimized') => {
-  //   return source === 'original' ? originalVideoUrl : optimizedVideoUrl;
-  // };
-
-  // const videoAUrl = blindMode
-  //   ? getUrlForSource(blindMapping.A)
-  //   : originalVideoUrl;
-
-  // const videoBUrl = blindMode
-  //   ? getUrlForSource(blindMapping.B)
-  //   : optimizedVideoUrl;  
-
   const getUrlForSource = (source: ActiveVideo) => {
     return source === 'original' ? originalVideoUrl : optimizedVideoUrl;
   };
@@ -157,9 +144,6 @@ function App() {
     createdAt: string;
   };  
 
-  // const getActiveVideoLabel = () => {
-  //   return activeVideo === 'original' ? 'A' : 'B';
-  // };  
 
   const getActiveVideoLabel = () => {
     return getLabelForSource(activeVideo);
@@ -169,7 +153,6 @@ function App() {
 
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // const [currentTime, setCurrentTime] = useState(0);
 
   const initialTime = getInitialTime();
   const [currentTime, setCurrentTime] = useState(initialTime);
@@ -206,32 +189,7 @@ function App() {
     });
   };  
 
-  // const handleVideoWaiting = () => {
-  //   if (!isPlaying || bufferingRef.current) return;
 
-  //   bufferingRef.current = true;
-  //   shouldResumeAfterBufferingRef.current = true;
-
-  //   const time = getActiveFrameTime();
-
-  //   getVideos().forEach((video) => {
-  //     video.pause();
-  //     video.currentTime = time;
-  //   });
-
-  //   setCurrentTime(time);
-  // };  
-
-  // const handleVideoWaiting = () => {
-  //   if (!isPlaying || bufferingRef.current) return;
-
-  //   bufferingRef.current = true;
-  //   shouldResumeAfterBufferingRef.current = true;
-
-  //   getVideos().forEach((video) => {
-  //     video.pause();
-  //   });
-  // };  
 
   const handleVideoWaiting = (videoType: ActiveVideo) => {
     if (!isPlaying || bufferingRef.current) return;
@@ -246,40 +204,7 @@ function App() {
     });
   };  
 
-  // const handleVideoCanPlay = async (
-  //   videoType: 'original' | 'optimized'
-  // ) => {
-  //   if (videoType === 'original') {
-  //     setVideoAStatus('Ready');
-  //   } else {
-  //     setVideoBStatus('Ready');
-  //   }
 
-  //   if (
-  //     !bufferingRef.current ||
-  //     !shouldResumeAfterBufferingRef.current ||
-  //     !areVideosPlayable()
-  //   ) {
-  //     return;
-  //   }
-
-  //   const videos = getVideos();
-
-  //   const syncTime = getActiveFrameTime();
-
-  //   videos.forEach((video) => {
-  //     video.currentTime = syncTime;
-  //   });
-
-  //   try {
-  //     await Promise.all(videos.map((video) => video.play()));
-
-  //     bufferingRef.current = false;
-  //     shouldResumeAfterBufferingRef.current = false;
-  //   } catch {
-  //     // Browser may reject playback.
-  //   }
-  // };  
 
   const handleVideoCanPlay = async (
     videoType: ActiveVideo
@@ -302,10 +227,7 @@ function App() {
 
     bufferingRef.current = false;
 
-    // const syncTime = Math.min(
-    //   originalRef.current?.currentTime ?? currentTime,
-    //   optimizedRef.current?.currentTime ?? currentTime
-    // );
+
 
     const syncTime = Math.min(
       originalRef.current?.currentTime ?? currentTime,
@@ -324,16 +246,7 @@ function App() {
       return;
     }
 
-    // try {
-    //   await Promise.all(
-    //     videos.map((video) => video.play())
-    //   );
 
-    //   shouldResumeAfterBufferingRef.current = false;
-    // } catch {
-    //   shouldResumeAfterBufferingRef.current = false;
-    //   setIsPlaying(false);
-    // }
 
     try {
       await Promise.all(
@@ -424,28 +337,7 @@ function App() {
     updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, time);
   };  
 
-  // const handleLoadedMetadata = (
-  //   event: React.SyntheticEvent<HTMLVideoElement>,
-  //   videoType: ActiveVideo
-  // ) => {
-  //   const video = event.currentTarget;
 
-  //   if (initialTime > 0) {
-  //     video.currentTime = initialTime;
-  //   }    
-
-  //   setDuration(video.duration);
-
-  //   if (videoType === 'original') {
-  //     originalFrameTimeRef.current = video.currentTime;
-  //     trackVideoFrame(video, originalFrameTimeRef);
-  //   }
-
-  //   if (videoType === 'optimized') {
-  //     optimizedFrameTimeRef.current = video.currentTime;
-  //     trackVideoFrame(video, optimizedFrameTimeRef);
-  //   }
-  // };
 
   const handleLoadedMetadata = (
     event: React.SyntheticEvent<HTMLVideoElement>,
@@ -455,11 +347,7 @@ function App() {
 
     setDuration(video.duration);
 
-    // const pendingSeekTime = pendingSeekTimeRef.current;
 
-    // if (pendingSeekTime !== null) {
-    //   video.currentTime = pendingSeekTime;
-    // }
 
     if (initialTime > 0) {
       video.currentTime = initialTime;
@@ -569,45 +457,18 @@ function App() {
       .padStart(6, '0')}`;
   };
 
-  // const getFrameNumber = (time: number) => {
-  //   return Math.round(time * 30);
-  // };  
+
 
 const getFrameNumber = (time: number) => {
   return Math.floor(time * frameRate);
 };  
 
 
-// const addLabel = (verdict: Verdict) => {
-//   const label: Label = {
-//     originalUrl: originalVideoUrl,
-//     optimizedUrl: optimizedVideoUrl,
-//     time: currentTime,
-//     frame: getFrameNumber(currentTime),
-//     verdict,
-//     activeVideo,
-//     createdAt: new Date().toISOString(),
-//   };
 
-//   setLabels((current) => [label, ...current]);
-// };
 
   const addLabel = (verdict: Verdict) => {
-    // const label: Label = {
-    //   videoAUrl: originalVideoUrl,
-    //   videoBUrl: optimizedVideoUrl,
-    //   time: currentTime,
-    //   frame: getFrameNumber(currentTime),
-    //   verdict,
-    //   activeVideo: getActiveVideoLabel(),
-    //   createdAt: new Date().toISOString(),
-    // };
 
-    const label: Label = {
-      // videoAUrl: originalVideoUrl,
-      // videoBUrl: optimizedVideoUrl,
-      // videoAUrl,
-      // videoBUrl,      
+    const label: Label = {    
       videoAUrl: getUrlForSource(getSourceForLabel('A')),
       videoBUrl: getUrlForSource(getSourceForLabel('B')),      
       time: currentTime,
@@ -669,36 +530,6 @@ const getFrameNumber = (time: number) => {
       : { A: 'original', B: 'optimized' };
   };  
 
-
-  // const handleBlindModeToggle = () => {
-  //   const active = activeVideo === 'original'
-  //     ? originalRef.current
-  //     : optimizedRef.current;
-
-  //   const time = active?.currentTime ?? currentTime;
-
-  //   pendingSeekTimeRef.current = time;
-
-  //   getVideos().forEach((video) => {
-  //     video.pause();
-  //   });
-
-  //   setIsPlaying(false);
-  //   setCurrentTime(time);
-
-  //   const nextBlindMode = !blindMode;
-
-  //   if (nextBlindMode) {
-  //     setBlindMapping(createBlindMapping());
-  //   } else {
-  //     setBlindMapping({
-  //       A: 'original',
-  //       B: 'optimized',
-  //     });
-  //   }
-
-  //   setBlindMode(nextBlindMode);
-  // };  
 
   const handleBlindModeToggle = () => {
     if (!blindMode) {
@@ -782,20 +613,20 @@ const getFrameNumber = (time: number) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [
-    handleToggle,
-    handlePlayPause,
-    handleFrameStep,
-    handleZoomIn,
-    handleZoomOut,
-    handleResetView,
-  ]);  
+  });  
+  // }, [
+  //   handleToggle,
+  //   handlePlayPause,
+  //   handleFrameStep,
+  //   handleZoomIn,
+  //   handleZoomOut,
+  //   handleResetView,
+  // ]);  
 
 
-  useEffect(() => {
-    //updateBrowserUrl(originalVideoUrl, optimizedVideoUrl);
-    updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, initialTime);
-  }, []);  
+  // useEffect(() => {
+  //   updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, initialTime);
+  // }, []);  
 
 
   return (
@@ -829,18 +660,12 @@ const getFrameNumber = (time: number) => {
         </button>
       </div>      
 
-      {/* <pre>
-      {JSON.stringify(blindMapping, null, 2)}
-      </pre>       */}
 
       <div className="toolbar">
         <section className="control-group">
           <h3>Compare</h3>
 
           <div className="button-row">
-            {/* <button onClick={() => setActiveVideo('original')}>A</button>
-            <button onClick={() => setActiveVideo('optimized')}>B</button>
-            <button onClick={handleToggle}>Toggle A/B</button> */}
 
             <button onClick={() => setActiveVideo(getSourceForLabel('A'))}>
               A
@@ -864,9 +689,6 @@ const getFrameNumber = (time: number) => {
           </div>
 
 
-           {/* Showing: {activeVideo === 'original' ? 'A' : 'B'} */}
-
-
            Showing: {getActiveVideoLabel()}
 
              
@@ -876,9 +698,6 @@ const getFrameNumber = (time: number) => {
           <h3>Playback</h3>
 
           <div className="button-row">
-            {/* <button onClick={handlePlayPause}>
-              {isPlaying ? 'Pause' : 'Play'}
-            </button> */}
 
             <button
               onClick={handlePlayPause}
@@ -922,7 +741,6 @@ const getFrameNumber = (time: number) => {
       </div>      
 
       <section className="label-panel">
-        {/* <h3>Labels: {labels.length}</h3> */}
 
         <div className="button-row">
           <button onClick={() => addLabel('A')}>A better</button>
@@ -957,36 +775,6 @@ const getFrameNumber = (time: number) => {
         </div>
 
         
-        {/* {labels.length > 0 && (
-          <div className="label-history">
-            <h4>Label history</h4>
-
-            <ul>
-              {labels.slice(0, 5).map((label) => (
-                <li key={label.createdAt}>
-                  <strong>
-                    {label.verdict === 'same' ? 'Same' : `${label.verdict} better`}
-                  </strong>
-
-                  <span>
-                    Frame {label.frame} — {formatTime(label.time)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )} */}
-
-        {/* <div className="label-history-controls">
-          <button
-            onClick={() => setShowLabelHistory((current) => !current)}
-            disabled={labels.length === 0}
-          >
-            {showLabelHistory
-              ? `Hide History (${labels.length})`
-              : `Show History (${labels.length})`}
-          </button>
-        </div> */}
 
         {showLabelHistory && labels.length > 0 && (
           <div className="label-history">
@@ -1022,9 +810,6 @@ const getFrameNumber = (time: number) => {
           onChange={(event) => handleSeek(Number(event.target.value))}
         />
 
-        {/* <span>
-          {currentTime.toFixed(2)}s / {duration.toFixed(2)}s
-        </span> */}
 
         <span>
           {formatTime(currentTime)} / {formatTime(duration)}
@@ -1041,7 +826,7 @@ const getFrameNumber = (time: number) => {
       </div>    
 
       <div 
-        // className="viewport"
+
         className={`viewport ${viewMode === 'side-by-side' ? 'side-by-side' : ''}`}
 
         onMouseDown={handleMouseDown}
@@ -1069,7 +854,7 @@ const getFrameNumber = (time: number) => {
         >
           <video
             ref={originalRef}
-            // className={activeVideo === 'original' ? 'video visible' : 'video hidden'}
+
 
             className={
               viewMode === 'side-by-side'
@@ -1085,26 +870,17 @@ const getFrameNumber = (time: number) => {
                 : undefined
             }            
 
-            //src={originalVideo}
             src={originalVideoUrl}
-            // src={videoAUrl}
+
             preload="auto"
             muted
             onLoadedMetadata={(event) => {
               handleLoadedMetadata(event, 'original');
             }}
-            onTimeUpdate={handleTimeUpdate}
-
-            // onCanPlay={() => setVideoAStatus('Ready')}
-
-            // onCanPlay={() => {
-            //   setVideoAStatus('Ready');
-            //   // pendingSeekTimeRef.current = null;
-            // }}            
+            onTimeUpdate={handleTimeUpdate}      
 
             onCanPlay={() => handleVideoCanPlay('original')}
 
-            // onWaiting={handleVideoWaiting}
             onWaiting={() => handleVideoWaiting('original')}
 
             onError={() => setVideoAStatus('Error')}
@@ -1112,7 +888,6 @@ const getFrameNumber = (time: number) => {
 
           <video
             ref={optimizedRef}
-            // className={activeVideo === 'optimized' ? 'video visible' : 'video hidden'}
 
             className={
               viewMode === 'side-by-side'
@@ -1128,23 +903,17 @@ const getFrameNumber = (time: number) => {
                 : undefined
             }            
 
-            //src={optimizedVideo}
             src={optimizedVideoUrl}
-            //src={videoBUrl}
+
             preload="auto"
             muted
             onLoadedMetadata={(event) => {
               handleLoadedMetadata(event, 'optimized');
             }}
             
-            // onCanPlay={() => setVideoBStatus('Ready')}
-            // onCanPlay={() => {
-            //   setVideoBStatus('Ready');
-            //   // pendingSeekTimeRef.current = null;
-            // }}         
+      
             onCanPlay={() => handleVideoCanPlay('optimized')}
 
-            // onWaiting={handleVideoWaiting}
             onWaiting={() => handleVideoWaiting('optimized')}
 
             onError={() => setVideoBStatus('Error')}            
