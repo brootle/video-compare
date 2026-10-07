@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
-type ActiveVideo = 'original' | 'optimized';
-type ViewMode = 'ab' | 'side-by-side';
-
-type BlindMapping = {
-  A: 'original' | 'optimized';
-  B: 'original' | 'optimized';
-};
-
+import type {
+  ActiveVideo,
+  ViewMode,
+  BlindMapping,
+} from './types';
 
 function App() {
 
@@ -614,20 +611,6 @@ const getFrameNumber = (time: number) => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   });  
-  // }, [
-  //   handleToggle,
-  //   handlePlayPause,
-  //   handleFrameStep,
-  //   handleZoomIn,
-  //   handleZoomOut,
-  //   handleResetView,
-  // ]);  
-
-
-  // useEffect(() => {
-  //   updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, initialTime);
-  // }, []);  
-
 
   return (
     <main className="app">
