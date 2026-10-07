@@ -5,6 +5,8 @@ import type {
   ActiveVideo,
   ViewMode,
   BlindMapping,
+  Verdict,
+  Label,
 } from './types';
 
 function App() {
@@ -70,7 +72,6 @@ function App() {
 
   const [bufferingVideo, setBufferingVideo] = useState<ActiveVideo | null>(null);
 
-  // const pendingSeekTimeRef = useRef<number | null>(null);
 
   const originalFrameTimeRef = useRef(0);
   const optimizedFrameTimeRef = useRef(0);
@@ -126,21 +127,6 @@ function App() {
   const getSideBySideOrder = (source: ActiveVideo) => {
     return getSourceForLabel('A') === source ? 0 : 1;
   };  
-
-  type Verdict = 'A' | 'B' | 'same';
-
-  type Label = {
-    videoAUrl: string;
-    videoBUrl: string;
-    time: number;
-    frame: number;
-    verdict: Verdict;
-    activeVideo: 'A' | 'B';
-    blindMode: boolean;
-    blindMapping: BlindMapping;
-    createdAt: string;
-  };  
-
 
   const getActiveVideoLabel = () => {
     return getLabelForSource(activeVideo);
