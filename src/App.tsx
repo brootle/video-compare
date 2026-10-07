@@ -1,6 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
+import {
+  DEFAULT_ORIGINAL_URL,
+  DEFAULT_OPTIMIZED_URL,
+  MIN_ZOOM,
+  MAX_ZOOM,
+  ZOOM_STEP,
+} from './constants';
+
+import {
+  getInitialTime,
+  getInitialUrl,
+  updateBrowserUrl,
+} from './utils/url';
+
 import type {
   ActiveVideo,
   ViewMode,
@@ -11,48 +25,8 @@ import type {
 
 function App() {
 
-  const defaultOriginalUrl =
-    'https://video-compare.media-storage.us-west.qencode.com/demo-original.mp4';
-
-  const defaultOptimizedUrl =
-    'https://video-compare.media-storage.us-west.qencode.com/demo-optimized.mp4';
-
-  const MIN_ZOOM = 1;
-  const MAX_ZOOM = 32;
-  const ZOOM_STEP = 0.5;    
-
-
-
-  const updateBrowserUrl = (
-    videoAUrl: string,
-    videoBUrl: string,
-    time: number
-  ) => {
-    const params = new URLSearchParams();
-
-    params.set('a', videoAUrl);
-    params.set('b', videoBUrl);
-
-    if (typeof time === 'number') {
-      params.set('t', time.toFixed(3));
-    }    
-
-    window.history.replaceState(null, '', `?${params.toString()}`);
-  };  
-
-  const getInitialTime = () => {
-    const params = new URLSearchParams(window.location.search);
-    return Number(params.get('t') || 0);
-  };  
-
-  const getInitialUrl = (key: string, fallback: string) => {
-    const params = new URLSearchParams(window.location.search);
-
-    return params.get(key) || fallback;
-  };    
-
-  const initialOriginalUrl = getInitialUrl('a', defaultOriginalUrl);
-  const initialOptimizedUrl = getInitialUrl('b', defaultOptimizedUrl);  
+  const initialOriginalUrl = getInitialUrl('a', DEFAULT_ORIGINAL_URL);
+  const initialOptimizedUrl = getInitialUrl('b', DEFAULT_OPTIMIZED_URL);  
 
   const [originalInputUrl, setOriginalInputUrl] = useState(initialOriginalUrl);
   const [optimizedInputUrl, setOptimizedInputUrl] = useState(initialOptimizedUrl);
