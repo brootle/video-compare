@@ -71,24 +71,6 @@
 }
 
 
-.url-inputs {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 12px;
-  align-items: end;
-  margin-bottom: 20px;
-}
-
-.url-inputs label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.url-inputs input {
-  padding: 8px 12px;
-}
-
 .shortcuts {
   display: flex;
   flex-wrap: wrap;
