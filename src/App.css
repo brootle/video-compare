@@ -3,13 +3,6 @@
   font-family: system-ui, sans-serif;
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .viewport {
   position: relative;
   max-width: 100%;
@@ -54,6 +47,13 @@
   max-width: 100%;
 }
 
+.toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 .toolbar label {
   display: flex;
   align-items: center;
@@ -70,10 +70,6 @@
   transform-origin: center center;
 }
 
-.video {
-  position: absolute;
-  inset: 0;
-}
 
 .url-inputs {
   display: grid;
@@ -132,13 +128,6 @@ kbd {
 
 .video-sources h3 {
   margin: 0;
-}
-
-.toolbar {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 20px;
 }
 
 .control-group {
@@ -265,9 +254,6 @@ button {
   margin-top: 8px;
 }
 
-.label-history {
-  margin-top: 12px;
-}
 
 
 
