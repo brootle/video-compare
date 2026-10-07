@@ -410,25 +410,6 @@ function App() {
     updateBrowserUrl(originalInputUrl, optimizedInputUrl, startTime);
   };  
 
-
-//   const formatTime = (seconds: number) => {
-//     const minutes = Math.floor(seconds / 60);
-//     const remainingSeconds = seconds % 60;
-
-//     return `${String(minutes).padStart(2, '0')}:${remainingSeconds
-//       .toFixed(3)
-//       .padStart(6, '0')}`;
-//   };
-
-
-
-// const getFrameNumber = (time: number) => {
-//   return Math.floor(time * frameRate);
-// };  
-
-
-
-
   const addLabel = (verdict: Verdict) => {
 
     const label: Label = {    
