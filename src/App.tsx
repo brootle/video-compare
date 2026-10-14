@@ -1,5 +1,8 @@
+
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
+
+import VideoStatus from './components/VideoStatus';
 
 import {
   DEFAULT_ORIGINAL_URL,
@@ -42,6 +45,7 @@ function App() {
 
 
   const [showLabelHistory, setShowLabelHistory] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(true);
 
 
   const originalRef = useRef<HTMLVideoElement | null>(null);
@@ -552,316 +556,152 @@ function App() {
 
   return (
     <main className="app">
-      <h1>Video Compare</h1>
+      <h1>Compare Video</h1>
 
-      <div className="video-sources">
-        <h3>Video Sources</h3>
-
-        <label className="url-input">
-          <span className="url-label">Video A URL:</span>
-          <input
-            value={originalInputUrl}
-            onChange={(event) => setOriginalInputUrl(event.target.value)}
-          />
-          <span className="video-status">{videoAStatus}</span>
-        </label>
-
-        <label className="url-input">
-          <span className="url-label">Video B URL:</span>
-          <input
-            value={optimizedInputUrl}
-            onChange={(event) => setOptimizedInputUrl(event.target.value)}
-          />
-          <span className="video-status">{videoBStatus}</span>
-        </label>
-    
-
-        <button onClick={handleLoadVideos}>
-          Load Videos
-        </button>
-      </div>      
-
-
-      <div className="toolbar">
-        <section className="control-group">
-          <h3>Compare</h3>
-
-          <div className="button-row">
-
-            <button onClick={() => setActiveVideo(getSourceForLabel('A'))}>
-              A
-            </button>
-
-            <button onClick={() => setActiveVideo(getSourceForLabel('B'))}>
-              B
-            </button>
-
-            <button onClick={handleToggle}>Toggle A/B</button>
-
-
-            <button onClick={handleToggleViewMode}>
-              View Mode
-            </button>              
-
-            <button onClick={handleBlindModeToggle}>
-              {blindMode ? 'Disable Blind Mode' : 'Enable Blind Mode'}
-            </button>          
-              
-          </div>
-
-
-           Showing: {getActiveVideoLabel()}
-
-             
-        </section>
-
-        <section className="control-group">
-          <h3>Playback</h3>
-
-          <div className="button-row">
-
-            <button
-              onClick={handlePlayPause}
-              disabled={!videosReady}
-            >
-              {videosReady ? (isPlaying ? 'Pause' : 'Play') : 'Loading...'}
-            </button>            
-
-            <button onClick={() => handleFrameStep(-1)}>
-              Previous frame
-            </button>
-
-            <button onClick={() => handleFrameStep(1)}>
-              Next frame
-            </button>
-          </div>
-
-          <label className="fps-control">
-            FPS
-            <input
-              type="number"
-              min={1}
-              max={240}
-              value={frameRate}
-              onChange={(event) => setFrameRate(Number(event.target.value))}
-            />
+      <section className="video-sources" aria-label="Video sources">
+        <h2>Video sources</h2>
+        <div className="source-rows">
+          <label className="url-input">
+            <span className="url-label">Video A URL</span>
+            <input type="url" value={originalInputUrl} onChange={(event) => setOriginalInputUrl(event.target.value)} />
+            {/* <span className={`video-status ${videoAStatus.toLowerCase()}`}>{videoAStatus}</span> */}
+            <VideoStatus status={videoAStatus} video="A" />
           </label>
-        </section>
-
-        <section className="control-group">
-          <h3>View</h3>
-
-          <div className="button-row">
-            <button onClick={handleZoomOut}>Zoom out</button>
-            <button onClick={handleZoomIn}>Zoom in</button>
-            <button onClick={handleResetView}>Reset view</button>
-          </div>
-
-          <strong>Zoom: {zoom.toFixed(1)}x</strong>
-        </section>
-      </div>      
-
-      <section className="label-panel">
-
-        <div className="button-row">
-          <button onClick={() => addLabel('A')}>A better</button>
-          <button onClick={() => addLabel('B')}>B better</button>
-          <button onClick={() => addLabel('same')}>Same</button>
-
-          <button
-            onClick={undoLastLabel}
-            disabled={labels.length === 0}
-          >
-            Undo Last
-          </button>
-
-          <button
-            onClick={clearLabels}
-            disabled={labels.length === 0}
-          >
-            Clear Labels
-          </button>
-
-          <button
-            onClick={() => setShowLabelHistory((current) => !current)}
-            disabled={labels.length === 0}
-          >
-            {showLabelHistory
-              ? `Hide History (${labels.length})`
-              : `Show History (${labels.length})`}
-          </button>          
-          <button onClick={exportLabels} disabled={labels.length === 0}>
-            Export JSON
-          </button>
+          <label className="url-input">
+            <span className="url-label">Video B URL</span>
+            <input type="url" value={optimizedInputUrl} onChange={(event) => setOptimizedInputUrl(event.target.value)} />
+            {/* <span className={`video-status ${videoBStatus.toLowerCase()}`}>{videoBStatus}</span> */}
+            <VideoStatus status={videoBStatus} video="B" />
+          </label>
         </div>
+        <div className="source-actions"><button className="primary-button" onClick={handleLoadVideos}>Load videos</button></div>
+      </section>
 
-        
-
-        {showLabelHistory && labels.length > 0 && (
-          <div className="label-history">
-            <h4>Label history</h4>
-
-            <ul>
-              {labels.slice(0, 10).map((label) => (
-                <li key={label.createdAt}>
-                  <strong>
-                    {label.verdict === 'same'
-                      ? 'Same'
-                      : `${label.verdict} better`}
-                  </strong>
-
-                  <span>
-                    Frame {label.frame} — {formatTime(label.time)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}        
-
-      </section>        
-
-      <div className="timeline">
-        <input
-          type="range"
-          min={0}
-          max={duration}
-          step={0.01}
-          value={currentTime}
-          onChange={(event) => handleSeek(Number(event.target.value))}
-        />
-
-
-        <span>
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </span>
-
-        <span>
-          Estimated frame: {getFrameNumber(currentTime, frameRate)}
-        </span>
-
-        <button onClick={copyShareLink}>
-          Copy Share Link
-        </button>        
-        
-      </div>    
-
-      <div 
-
+      <div
         className={`viewport ${viewMode === 'side-by-side' ? 'side-by-side' : ''}`}
-
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       >
-
         {bufferingVideo && (
           <div className="buffering-overlay">
-            <div className="buffering-indicator">
-              <span className="buffering-spinner" />
-              <span>
-                Buffering video {getLabelForSource(bufferingVideo)}…
-              </span>
+            <div className="buffering-indicator"><span className="buffering-spinner" />
+              <span>Buffering video {getLabelForSource(bufferingVideo)}…</span>
             </div>
           </div>
-        )}        
-
-        <div
-          className="video-transform"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-          }}
-        >
+        )}
+        <div className="video-transform" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
           <video
             ref={originalRef}
-
-
-            className={
-              viewMode === 'side-by-side'
-                ? 'video side-video'
-                : activeVideo === 'original'
-                  ? 'video visible'
-                  : 'video hidden'
-            }
-
-            style={
-              viewMode === 'side-by-side'
-                ? { order: getSideBySideOrder('original') }
-                : undefined
-            }            
-
+            className={viewMode === 'side-by-side' ? 'video side-video' : activeVideo === 'original' ? 'video visible' : 'video hidden'}
+            style={viewMode === 'side-by-side' ? { order: getSideBySideOrder('original') } : undefined}
             src={originalVideoUrl}
-
             preload="auto"
             muted
-            onLoadedMetadata={(event) => {
-              handleLoadedMetadata(event, 'original');
-            }}
-            onTimeUpdate={handleTimeUpdate}      
-
+            onLoadedMetadata={(event) => handleLoadedMetadata(event, 'original')}
+            onTimeUpdate={handleTimeUpdate}
             onCanPlay={() => handleVideoCanPlay('original')}
-
             onWaiting={() => handleVideoWaiting('original')}
-
             onError={() => setVideoAStatus('Error')}
           />
-
           <video
             ref={optimizedRef}
-
-            className={
-              viewMode === 'side-by-side'
-                ? 'video side-video'
-                : activeVideo === 'optimized'
-                  ? 'video visible'
-                  : 'video hidden'
-            }            
-
-            style={
-              viewMode === 'side-by-side'
-                ? { order: getSideBySideOrder('optimized') }
-                : undefined
-            }            
-
+            className={viewMode === 'side-by-side' ? 'video side-video' : activeVideo === 'optimized' ? 'video visible' : 'video hidden'}
+            style={viewMode === 'side-by-side' ? { order: getSideBySideOrder('optimized') } : undefined}
             src={optimizedVideoUrl}
-
             preload="auto"
             muted
-            onLoadedMetadata={(event) => {
-              handleLoadedMetadata(event, 'optimized');
-            }}
-            
-      
+            onLoadedMetadata={(event) => handleLoadedMetadata(event, 'optimized')}
             onCanPlay={() => handleVideoCanPlay('optimized')}
-
             onWaiting={() => handleVideoWaiting('optimized')}
-
-            onError={() => setVideoBStatus('Error')}            
-          />          
+            onError={() => setVideoBStatus('Error')}
+          />
         </div>
-
-
+        <div className="viewport-label">{viewMode === 'side-by-side' ? 'Video A + B' : `Video ${getActiveVideoLabel()}`}</div>
+        <div className="viewport-zoom">Zoom: {zoom.toFixed(1)}x</div>
       </div>
 
-      <h4>Playback & Navigation</h4>
-      <div className="shortcuts">
-        <span><kbd>Space</kbd> Toggle A/B</span>
-        <span><kbd>K</kbd> Play / Pause</span>
-        <span><kbd>←</kbd> Previous frame</span>
-        <span><kbd>→</kbd> Next frame</span>
-        <span><kbd>+</kbd> Zoom in</span>
-        <span><kbd>-</kbd> Zoom out</span>
-        <span><kbd>R</kbd> Reset view</span>
-      </div>  
+      <div className="timeline">
+        <input
+          aria-label="Video position"
+          type="range"
+          min={0}
+          max={duration || 0}
+          step={0.01}
+          value={Math.min(currentTime, duration || 0)}
+          style={{ '--progress': `${duration > 0 ? Math.min(100, Math.max(0, currentTime / duration * 100)) : 0}%` } as React.CSSProperties}
+          onChange={(event) => handleSeek(Number(event.target.value))}
+        />
+        <span className="current-time">{formatTime(currentTime)} / {formatTime(duration)}</span>
+        <label className="fps-control"><input type="number" min={1} max={240} value={frameRate} onChange={(event) => setFrameRate(Number(event.target.value))} /><span>FPS</span></label>
+        <span className="estimated-frame">Estimated frame: <strong>{getFrameNumber(currentTime, frameRate)}</strong></span>
+      </div>
 
-      <h4>Labeling</h4>
-      <div className="shortcuts">
-        <span><kbd>1</kbd> A better</span>
-        <span><kbd>2</kbd> B better</span>
-        <span><kbd>3</kbd> Same</span>
-        <span><kbd>Z</kbd> Undo label</span>
-      </div>            
+      <div className="utility-row">
+        <button className="primary-button" onClick={copyShareLink}>Copy Share Link</button>
+        <label className="switch-label"><input type="checkbox" checked={showKeyboardShortcuts} onChange={(event) => setShowKeyboardShortcuts(event.target.checked)} />Show Keyboard Shortcuts</label>
+      </div>
+
+      <section className="block-panel">
+        <h2 className="block-panel-header">PLAYBACK</h2>
+        <div className="block-panel-content">
+          <div className="block-panel-column">
+            <div className="control-buttons">
+              <button disabled={!videosReady} onClick={handlePlayPause}>{videosReady ? (isPlaying ? 'Pause' : 'Play') : 'Loading…'} {showKeyboardShortcuts && <kbd>K</kbd>}</button>
+              <button onClick={() => handleFrameStep(-1)}>Prev frame {showKeyboardShortcuts && <kbd>←</kbd>}</button>
+              <button onClick={() => handleFrameStep(1)}>Next frame {showKeyboardShortcuts && <kbd>→</kbd>}</button>
+            </div>
+          </div>
+          <div className="block-panel-column">
+            <div className="control-buttons">
+              <button onClick={handleZoomOut}>Zoom out {showKeyboardShortcuts && <kbd>−</kbd>}</button>
+              <button onClick={handleZoomIn}>Zoom in {showKeyboardShortcuts && <kbd>+</kbd>}</button>
+              <button onClick={handleResetView}>Reset view {showKeyboardShortcuts && <kbd>R</kbd>}</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="block-panel">
+        <h2 className="block-panel-header">COMPARE &amp; LABEL</h2>
+        <div className="block-panel-content">
+          <div className="block-panel-column">
+            <div className="block-column-title">Showing: <strong>{viewMode === 'side-by-side' ? 'Video A and B' : `Video ${getActiveVideoLabel()}`}</strong></div>
+            <div className="control-buttons">
+              {/* <button onClick={() => setActiveVideo(getSourceForLabel('A'))}>Show A</button> */}
+              {/* <button onClick={() => setActiveVideo(getSourceForLabel('B'))}>Show B</button> */}
+              <button onClick={handleToggle}>Toggle A/B {showKeyboardShortcuts && <kbd>Space</kbd>}</button>
+              <button onClick={handleToggleViewMode}>Toggle View Mode</button>
+            </div>
+            <label className="switch-label blind-toggle"><input type="checkbox" checked={blindMode} onChange={handleBlindModeToggle} />Blind mode</label>
+          </div>
+          <div className="block-panel-column">
+            <div className="block-column-title">Mark As</div>
+            <div className="control-buttons">
+              <button onClick={() => addLabel('A')}>A better {showKeyboardShortcuts && <kbd>1</kbd>}</button>
+              <button onClick={() => addLabel('B')}>B better {showKeyboardShortcuts && <kbd>2</kbd>}</button>
+              <button onClick={() => addLabel('same')}>Same {showKeyboardShortcuts && <kbd>3</kbd>}</button>
+            </div>
+          </div>
+        </div>
+        <div className="history-container">
+          <div className="history-header">
+            <h3>Label History</h3>
+            <div className="history-actions">
+              <button disabled={labels.length === 0} onClick={undoLastLabel}>Undo {showKeyboardShortcuts && <kbd>Z</kbd>}</button>
+              <button disabled={labels.length === 0} onClick={clearLabels}>Clear</button>
+              <button disabled={labels.length === 0} onClick={exportLabels}>Export JSON</button>
+              <button disabled={labels.length === 0} onClick={() => setShowLabelHistory((current) => !current)}>{showLabelHistory ? 'Hide history' : `Show history (${labels.length})`}</button>
+            </div>
+          </div>
+          {labels.length === 0 ? <p className="history-empty">You have not marked any labels yet.</p> : showLabelHistory ? (
+            <ul className="label-history">
+              {labels.map((label, index) => <li key={`${label.createdAt}-${index}`}><strong>{label.verdict === 'same' ? 'Same' : `${label.verdict} better`}</strong><span>Frame {label.frame} · {formatTime(label.time)}</span></li>)}
+            </ul>
+          ) : <p className="history-empty">{labels.length} label{labels.length === 1 ? '' : 's'} recorded. Select Show history to view them.</p>}
+        </div>
+      </section>
     </main>
   );
 }
