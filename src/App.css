@@ -39,7 +39,9 @@
 
 .source-rows input:focus-visible,
 .fps-control input:focus-visible,
-.timeline input:focus-visible {
+.timeline input:focus-visible,
+input:focus-visible,
+button:focus-visible  {
   outline: none;
   border-color: #316fea;
   box-shadow: 0 0 0 1px rgba(49, 111, 234, 0.15);

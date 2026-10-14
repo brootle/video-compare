@@ -2,7 +2,11 @@
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
 
-import VideoStatus from './components/VideoStatus';
+import VideoSources from './components/VideoSources';
+import PlaybackControls from './components/PlaybackControls';
+import CompareControls from './components/CompareControls';
+import VideoTimeline from './components/VideoTimeline';
+import VideoViewport from './components/VideoViewport';
 
 import {
   DEFAULT_ORIGINAL_URL,
@@ -19,7 +23,6 @@ import {
 } from './utils/url';
 
 import {
-  formatTime,
   getFrameNumber,
   createBlindMapping,
 } from './utils/video';
@@ -43,10 +46,7 @@ function App() {
   const [originalVideoUrl, setOriginalVideoUrl] = useState(initialOriginalUrl);
   const [optimizedVideoUrl, setOptimizedVideoUrl] = useState(initialOptimizedUrl);
 
-
-  const [showLabelHistory, setShowLabelHistory] = useState(false);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(true);
-
 
   const originalRef = useRef<HTMLVideoElement | null>(null);
   const optimizedRef = useRef<HTMLVideoElement | null>(null);
@@ -55,7 +55,6 @@ function App() {
   const shouldResumeAfterBufferingRef = useRef(false);
 
   const [bufferingVideo, setBufferingVideo] = useState<ActiveVideo | null>(null);
-
 
   const originalFrameTimeRef = useRef(0);
   const optimizedFrameTimeRef = useRef(0);
@@ -71,7 +70,10 @@ function App() {
   });
 
   const [frameRate, setFrameRate] = useState(30);
-  const frameStep = 1 / frameRate;
+  const frameStep =
+    Number.isFinite(frameRate) && frameRate >= 1 && frameRate <= 240
+      ? 1 / frameRate
+      : 1 / 30;
 
   const [activeVideo, setActiveVideo] = useState<ActiveVideo>('original');
 
@@ -222,11 +224,18 @@ function App() {
 
       shouldResumeAfterBufferingRef.current = false;
       setBufferingVideo(null);
-    } catch {
+    } catch (error) {
+      // One video may have started while the other failed.
+      videos.forEach((video) => video.pause());
+
       shouldResumeAfterBufferingRef.current = false;
+      bufferingRef.current = false;
+
       setBufferingVideo(null);
       setIsPlaying(false);
-    }    
+
+      console.error('Failed to resume video playback after buffering:', error);
+    }
   };
 
   const getActiveFrameTime = () => {
@@ -260,13 +269,45 @@ function App() {
     );
   };  
 
+  // const handlePlayPause = async () => {
+  //   if (!videosReady) return;
+
+  //   const videos = getVideos();
+
+  //   if (isPlaying) {
+
+  //     shouldResumeAfterBufferingRef.current = false;
+  //     bufferingRef.current = false;
+
+  //     setBufferingVideo(null);
+
+  //     const time = getActiveFrameTime();
+
+  //     videos.forEach((video) => {
+  //       video.pause();
+  //       video.currentTime = time;
+  //     });
+
+  //     setCurrentTime(time);
+  //     setIsPlaying(false);
+
+  //     updateBrowserUrl(originalVideoUrl, optimizedVideoUrl, time);
+
+  //     return;
+  //   }
+
+  //   await Promise.all(videos.map((video) => video.play()));
+  //   setIsPlaying(true);
+  // };
+
   const handlePlayPause = async () => {
     if (!videosReady) return;
 
     const videos = getVideos();
 
-    if (isPlaying) {
+    if (videos.length !== 2) return;
 
+    if (isPlaying) {
       shouldResumeAfterBufferingRef.current = false;
       bufferingRef.current = false;
 
@@ -287,10 +328,24 @@ function App() {
       return;
     }
 
-    await Promise.all(videos.map((video) => video.play()));
-    setIsPlaying(true);
-  };
+    try {
+      await Promise.all(videos.map((video) => video.play()));
 
+      setIsPlaying(true);
+    } catch (error) {
+      // One video may have started even if the other failed.
+      // Pause both to avoid inconsistent playback.
+      videos.forEach((video) => video.pause());
+
+      shouldResumeAfterBufferingRef.current = false;
+      bufferingRef.current = false;
+
+      setBufferingVideo(null);
+      setIsPlaying(false);
+
+      console.error('Failed to start video playback:', error);
+    }
+  };  
 
   const handleSeek = (time: number) => {
     getVideos().forEach((video) => {
@@ -394,6 +449,10 @@ function App() {
   const handleLoadVideos = () => {
     const startTime = 0;
 
+    // Cancel buffering recovery from the previous sources.
+    bufferingRef.current = false;
+    shouldResumeAfterBufferingRef.current = false;
+
     setVideoAStatus('Loading');
     setVideoBStatus('Loading');    
 
@@ -456,7 +515,6 @@ function App() {
     }
 
     setLabels([]);
-    setShowLabelHistory(false);
   };
 
   const copyShareLink = async () => {
@@ -558,150 +616,86 @@ function App() {
     <main className="app">
       <h1>Compare Video</h1>
 
-      <section className="video-sources" aria-label="Video sources">
-        <h2>Video sources</h2>
-        <div className="source-rows">
-          <label className="url-input">
-            <span className="url-label">Video A URL</span>
-            <input type="url" value={originalInputUrl} onChange={(event) => setOriginalInputUrl(event.target.value)} />
-            {/* <span className={`video-status ${videoAStatus.toLowerCase()}`}>{videoAStatus}</span> */}
-            <VideoStatus status={videoAStatus} video="A" />
-          </label>
-          <label className="url-input">
-            <span className="url-label">Video B URL</span>
-            <input type="url" value={optimizedInputUrl} onChange={(event) => setOptimizedInputUrl(event.target.value)} />
-            {/* <span className={`video-status ${videoBStatus.toLowerCase()}`}>{videoBStatus}</span> */}
-            <VideoStatus status={videoBStatus} video="B" />
-          </label>
-        </div>
-        <div className="source-actions"><button className="primary-button" onClick={handleLoadVideos}>Load videos</button></div>
-      </section>
+      <VideoSources
+        originalInputUrl={originalInputUrl}
+        optimizedInputUrl={optimizedInputUrl}
+        videoAStatus={videoAStatus}
+        videoBStatus={videoBStatus}
+        onOriginalUrlChange={setOriginalInputUrl}
+        onOptimizedUrlChange={setOptimizedInputUrl}
+        onLoadVideos={handleLoadVideos}
+      />
 
-      <div
-        className={`viewport ${viewMode === 'side-by-side' ? 'side-by-side' : ''}`}
+      <VideoViewport
+        originalRef={originalRef}
+        optimizedRef={optimizedRef}
+        originalVideoUrl={originalVideoUrl}
+        optimizedVideoUrl={optimizedVideoUrl}
+        activeVideo={activeVideo}
+        activeVideoLabel={getActiveVideoLabel()}
+        viewMode={viewMode}
+        zoom={zoom}
+        pan={pan}
+        bufferingVideo={bufferingVideo}
+        bufferingVideoLabel={
+          bufferingVideo ? getLabelForSource(bufferingVideo) : null
+        }
+        originalOrder={getSideBySideOrder('original')}
+        optimizedOrder={getSideBySideOrder('optimized')}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-      >
-        {bufferingVideo && (
-          <div className="buffering-overlay">
-            <div className="buffering-indicator"><span className="buffering-spinner" />
-              <span>Buffering video {getLabelForSource(bufferingVideo)}…</span>
-            </div>
-          </div>
-        )}
-        <div className="video-transform" style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}>
-          <video
-            ref={originalRef}
-            className={viewMode === 'side-by-side' ? 'video side-video' : activeVideo === 'original' ? 'video visible' : 'video hidden'}
-            style={viewMode === 'side-by-side' ? { order: getSideBySideOrder('original') } : undefined}
-            src={originalVideoUrl}
-            preload="auto"
-            muted
-            onLoadedMetadata={(event) => handleLoadedMetadata(event, 'original')}
-            onTimeUpdate={handleTimeUpdate}
-            onCanPlay={() => handleVideoCanPlay('original')}
-            onWaiting={() => handleVideoWaiting('original')}
-            onError={() => setVideoAStatus('Error')}
-          />
-          <video
-            ref={optimizedRef}
-            className={viewMode === 'side-by-side' ? 'video side-video' : activeVideo === 'optimized' ? 'video visible' : 'video hidden'}
-            style={viewMode === 'side-by-side' ? { order: getSideBySideOrder('optimized') } : undefined}
-            src={optimizedVideoUrl}
-            preload="auto"
-            muted
-            onLoadedMetadata={(event) => handleLoadedMetadata(event, 'optimized')}
-            onCanPlay={() => handleVideoCanPlay('optimized')}
-            onWaiting={() => handleVideoWaiting('optimized')}
-            onError={() => setVideoBStatus('Error')}
-          />
-        </div>
-        <div className="viewport-label">{viewMode === 'side-by-side' ? 'Video A + B' : `Video ${getActiveVideoLabel()}`}</div>
-        <div className="viewport-zoom">Zoom: {zoom.toFixed(1)}x</div>
-      </div>
+        onLoadedMetadata={handleLoadedMetadata}
+        onTimeUpdate={handleTimeUpdate}
+        onCanPlay={handleVideoCanPlay}
+        onWaiting={handleVideoWaiting}
+        onError={(videoType) => {
+          if (videoType === 'original') {
+            setVideoAStatus('Error');
+          } else {
+            setVideoBStatus('Error');
+          }
+        }}
+      />
 
-      <div className="timeline">
-        <input
-          aria-label="Video position"
-          type="range"
-          min={0}
-          max={duration || 0}
-          step={0.01}
-          value={Math.min(currentTime, duration || 0)}
-          style={{ '--progress': `${duration > 0 ? Math.min(100, Math.max(0, currentTime / duration * 100)) : 0}%` } as React.CSSProperties}
-          onChange={(event) => handleSeek(Number(event.target.value))}
-        />
-        <span className="current-time">{formatTime(currentTime)} / {formatTime(duration)}</span>
-        <label className="fps-control"><input type="number" min={1} max={240} value={frameRate} onChange={(event) => setFrameRate(Number(event.target.value))} /><span>FPS</span></label>
-        <span className="estimated-frame">Estimated frame: <strong>{getFrameNumber(currentTime, frameRate)}</strong></span>
-      </div>
+      <VideoTimeline
+        currentTime={currentTime}
+        duration={duration}
+        frameRate={frameRate}
+        onSeek={handleSeek}
+        onFrameRateChange={setFrameRate}
+      />
 
       <div className="utility-row">
         <button className="primary-button" onClick={copyShareLink}>Copy Share Link</button>
         <label className="switch-label"><input type="checkbox" checked={showKeyboardShortcuts} onChange={(event) => setShowKeyboardShortcuts(event.target.checked)} />Show Keyboard Shortcuts</label>
       </div>
 
-      <section className="block-panel">
-        <h2 className="block-panel-header">PLAYBACK</h2>
-        <div className="block-panel-content">
-          <div className="block-panel-column">
-            <div className="control-buttons">
-              <button disabled={!videosReady} onClick={handlePlayPause}>{videosReady ? (isPlaying ? 'Pause' : 'Play') : 'Loading…'} {showKeyboardShortcuts && <kbd>K</kbd>}</button>
-              <button onClick={() => handleFrameStep(-1)}>Prev frame {showKeyboardShortcuts && <kbd>←</kbd>}</button>
-              <button onClick={() => handleFrameStep(1)}>Next frame {showKeyboardShortcuts && <kbd>→</kbd>}</button>
-            </div>
-          </div>
-          <div className="block-panel-column">
-            <div className="control-buttons">
-              <button onClick={handleZoomOut}>Zoom out {showKeyboardShortcuts && <kbd>−</kbd>}</button>
-              <button onClick={handleZoomIn}>Zoom in {showKeyboardShortcuts && <kbd>+</kbd>}</button>
-              <button onClick={handleResetView}>Reset view {showKeyboardShortcuts && <kbd>R</kbd>}</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PlaybackControls
+        videosReady={videosReady}
+        isPlaying={isPlaying}
+        showKeyboardShortcuts={showKeyboardShortcuts}
+        onPlayPause={handlePlayPause}
+        onFrameStep={handleFrameStep}
+        onZoomIn={handleZoomIn}
+        onZoomOut={handleZoomOut}
+        onResetView={handleResetView}
+      />
 
-      <section className="block-panel">
-        <h2 className="block-panel-header">COMPARE &amp; LABEL</h2>
-        <div className="block-panel-content">
-          <div className="block-panel-column">
-            <div className="block-column-title">Showing: <strong>{viewMode === 'side-by-side' ? 'Video A and B' : `Video ${getActiveVideoLabel()}`}</strong></div>
-            <div className="control-buttons">
-              {/* <button onClick={() => setActiveVideo(getSourceForLabel('A'))}>Show A</button> */}
-              {/* <button onClick={() => setActiveVideo(getSourceForLabel('B'))}>Show B</button> */}
-              <button onClick={handleToggle}>Toggle A/B {showKeyboardShortcuts && <kbd>Space</kbd>}</button>
-              <button onClick={handleToggleViewMode}>Toggle View Mode</button>
-            </div>
-            <label className="switch-label blind-toggle"><input type="checkbox" checked={blindMode} onChange={handleBlindModeToggle} />Blind mode</label>
-          </div>
-          <div className="block-panel-column">
-            <div className="block-column-title">Mark As</div>
-            <div className="control-buttons">
-              <button onClick={() => addLabel('A')}>A better {showKeyboardShortcuts && <kbd>1</kbd>}</button>
-              <button onClick={() => addLabel('B')}>B better {showKeyboardShortcuts && <kbd>2</kbd>}</button>
-              <button onClick={() => addLabel('same')}>Same {showKeyboardShortcuts && <kbd>3</kbd>}</button>
-            </div>
-          </div>
-        </div>
-        <div className="history-container">
-          <div className="history-header">
-            <h3>Label History</h3>
-            <div className="history-actions">
-              <button disabled={labels.length === 0} onClick={undoLastLabel}>Undo {showKeyboardShortcuts && <kbd>Z</kbd>}</button>
-              <button disabled={labels.length === 0} onClick={clearLabels}>Clear</button>
-              <button disabled={labels.length === 0} onClick={exportLabels}>Export JSON</button>
-              <button disabled={labels.length === 0} onClick={() => setShowLabelHistory((current) => !current)}>{showLabelHistory ? 'Hide history' : `Show history (${labels.length})`}</button>
-            </div>
-          </div>
-          {labels.length === 0 ? <p className="history-empty">You have not marked any labels yet.</p> : showLabelHistory ? (
-            <ul className="label-history">
-              {labels.map((label, index) => <li key={`${label.createdAt}-${index}`}><strong>{label.verdict === 'same' ? 'Same' : `${label.verdict} better`}</strong><span>Frame {label.frame} · {formatTime(label.time)}</span></li>)}
-            </ul>
-          ) : <p className="history-empty">{labels.length} label{labels.length === 1 ? '' : 's'} recorded. Select Show history to view them.</p>}
-        </div>
-      </section>
+      <CompareControls
+        activeVideoLabel={getActiveVideoLabel()}
+        viewMode={viewMode}
+        blindMode={blindMode}
+        labels={labels}
+        showKeyboardShortcuts={showKeyboardShortcuts}
+        onToggleVideo={handleToggle}
+        onToggleViewMode={handleToggleViewMode}
+        onToggleBlindMode={handleBlindModeToggle}
+        onAddLabel={addLabel}
+        onUndoLabel={undoLastLabel}
+        onClearLabels={clearLabels}
+        onExportLabels={exportLabels}
+      />
     </main>
   );
 }
