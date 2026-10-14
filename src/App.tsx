@@ -45,7 +45,7 @@ function App() {
 
 
   const [showLabelHistory, setShowLabelHistory] = useState(false);
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
+  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(true);
 
 
   const originalRef = useRef<HTMLVideoElement | null>(null);
